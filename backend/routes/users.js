@@ -1,54 +1,46 @@
 const express = require('express');
 const router = express.Router();
 
-// Import controllers (to be created)
-const {
-  getProfile,
-  updateProfile,
-  deleteAccount,
-  getUserItems,
-  getUserOrders,
-  getUserReviews,
-  uploadAvatar
-} = require('../controllers/userController');
+// Import controllers (placeholder for now)
+const userController = require('../controllers/userController');
 
 // Import middleware
-const auth = require('../middleware/auth');
-const { validateUser } = require('../middleware/validation');
+const { auth } = require('../middleware/auth');
+const { validateProfileUpdate } = require('../middleware/validation');
 
 // @route   GET /api/users/profile
 // @desc    Get user profile
 // @access  Private
-router.get('/profile', auth, getProfile);
+router.get('/profile', auth, userController.getProfile);
 
 // @route   PUT /api/users/profile
 // @desc    Update user profile
 // @access  Private
-router.put('/profile', auth, validateUser, updateProfile);
+router.put('/profile', auth, validateProfileUpdate, userController.updateProfile);
 
 // @route   DELETE /api/users/profile
 // @desc    Delete user account
 // @access  Private
-router.delete('/profile', auth, deleteAccount);
+router.delete('/profile', auth, userController.deleteAccount);
 
 // @route   GET /api/users/items
 // @desc    Get user's items
 // @access  Private
-router.get('/items', auth, getUserItems);
+router.get('/items', auth, userController.getUserItems);
 
 // @route   GET /api/users/orders
 // @desc    Get user's orders
 // @access  Private
-router.get('/orders', auth, getUserOrders);
+router.get('/orders', auth, userController.getUserOrders);
 
 // @route   GET /api/users/reviews
 // @desc    Get user's reviews
 // @access  Private
-router.get('/reviews', auth, getUserReviews);
+router.get('/reviews', auth, userController.getUserReviews);
 
 // @route   POST /api/users/avatar
 // @desc    Upload user avatar
 // @access  Private
-router.post('/avatar', auth, uploadAvatar);
+router.post('/avatar', auth, userController.uploadAvatar);
 
 module.exports = router;

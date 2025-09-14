@@ -4,7 +4,7 @@ const router = express.Router();
 // Import controller and middleware
 const fileUploadController = require('../controllers/fileUploadController');
 const { uploadSingle, uploadMultiple, validateUploadedFiles, processUploadedFiles } = require('../middleware/upload');
-const auth = require('../middleware/auth');
+const { auth } = require('../middleware/auth');
 
 // @route   POST /api/upload/single
 // @desc    Upload single file to S3
