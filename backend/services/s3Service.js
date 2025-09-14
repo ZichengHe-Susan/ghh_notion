@@ -41,7 +41,7 @@ class S3Service {
         Key: key,
         Body: fileBuffer,
         ContentType: mimeType,
-        ACL: 'public-read', // Make file publicly accessible
+        // ACL: 'public-read', // bucket doesn't allow ACLs
         Metadata: {
           originalName: fileName,
           uploadedAt: new Date().toISOString()
@@ -78,7 +78,7 @@ class S3Service {
   async uploadMultipleFiles(files, folder = 'uploads') {
     try {
       const uploadPromises = files.map(file => 
-        this.uploadFile(file.buffer, file.name, folder, file.mimeType)
+        this.uploadFile(file.buffer, file.name || file.originalname || 'unknown', folder, file.mimeType)
       );
 
       const results = await Promise.all(uploadPromises);
@@ -208,8 +208,8 @@ class S3Service {
       const params = {
         Bucket: this.bucketName,
         Key: key,
-        ContentType: mimeType,
-        ACL: 'public-read'
+        ContentType: mimeType
+        // ACL: 'public-read' 
       };
 
       const command = new PutObjectCommand(params);
@@ -221,8 +221,8 @@ class S3Service {
         key,
         fields: {
           key,
-          'Content-Type': mimeType,
-          'x-amz-acl': 'public-read'
+          'Content-Type': mimeType
+          // 'x-amz-acl': 'public-read' 
         }
       };
 
