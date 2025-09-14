@@ -111,6 +111,70 @@ const userSchema = new mongoose.Schema({
       default: 0
     }
   },
+  verification: {
+    status: {
+      type: String,
+      enum: ['unverified', 'pending', 'verified', 'rejected'],
+      default: 'unverified'
+    },
+    submittedAt: {
+      type: Date
+    },
+    reviewedAt: {
+      type: Date
+    },
+    reviewedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    rejectionReason: {
+      type: String,
+      maxlength: [500, 'Rejection reason cannot exceed 500 characters']
+    },
+    documents: [{
+      filename: {
+        type: String,
+        required: true
+      },
+      url: {
+        type: String,
+        required: true
+      },
+      key: {
+        type: String,
+        required: true
+      },
+      type: {
+        type: String,
+        enum: ['id', 'passport', 'driver_license', 'utility_bill', 'bank_statement', 'other'],
+        required: true
+      },
+      status: {
+        type: String,
+        enum: ['pending', 'approved', 'rejected'],
+        default: 'pending'
+      },
+      uploadedAt: {
+        type: Date,
+        default: Date.now
+      },
+      reviewedAt: {
+        type: Date
+      },
+      reviewedBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+      },
+      rejectionReason: {
+        type: String,
+        maxlength: [200, 'Rejection reason cannot exceed 200 characters']
+      }
+    }],
+    notes: {
+      type: String,
+      maxlength: [1000, 'Notes cannot exceed 1000 characters']
+    }
+  },
   isActive: {
     type: Boolean,
     default: true

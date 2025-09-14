@@ -8,8 +8,10 @@
     "dev": "nodemon server.js",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:quick": "node quick-test.js",
-    "test:run": "node test-runner.js",
+    "test:integration": "node tests/run-all-tests.js",
+    "test:phase-2-2": "node tests/integration/phase-2-2.test.js",
+    "test:quick": "node tests/integration/quick-test.js",
+    "test:run": "node tests/integration/test-runner.js",
     "seed": "node seed.js seed",
     "seed:clear": "node seed.js clear",
     "seed:reset": "node seed.js reset"

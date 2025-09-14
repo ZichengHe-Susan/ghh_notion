@@ -1,12 +1,13 @@
 const express = require('express');
 const router = express.Router();
 
-// Import controllers (placeholder for now)
+// Import controllers
 const userController = require('../controllers/userController');
 
 // Import middleware
 const { auth } = require('../middleware/auth');
-const { validateProfileUpdate } = require('../middleware/validation');
+const { validateProfileUpdate, validateVerificationSubmission } = require('../middleware/validation');
+const { uploadSingle } = require('../middleware/upload');
 
 // @route   GET /api/users/profile
 // @desc    Get user profile
@@ -22,6 +23,11 @@ router.put('/profile', auth, validateProfileUpdate, userController.updateProfile
 // @desc    Delete user account
 // @access  Private
 router.delete('/profile', auth, userController.deleteAccount);
+
+// @route   GET /api/users/dashboard
+// @desc    Get user dashboard data
+// @access  Private
+router.get('/dashboard', auth, userController.getDashboard);
 
 // @route   GET /api/users/items
 // @desc    Get user's items
@@ -41,6 +47,16 @@ router.get('/reviews', auth, userController.getUserReviews);
 // @route   POST /api/users/avatar
 // @desc    Upload user avatar
 // @access  Private
-router.post('/avatar', auth, userController.uploadAvatar);
+router.post('/avatar', auth, uploadSingle('avatar'), userController.uploadAvatar);
+
+// @route   POST /api/users/verification
+// @desc    Submit seller verification documents
+// @access  Private
+router.post('/verification', auth, validateVerificationSubmission, userController.submitVerification);
+
+// @route   GET /api/users/verification
+// @desc    Get verification status
+// @access  Private
+router.get('/verification', auth, userController.getVerificationStatus);
 
 module.exports = router;

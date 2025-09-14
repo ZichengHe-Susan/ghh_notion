@@ -159,23 +159,6 @@ const validateEmailChange = [
     .withMessage('Current password is required for email change')
 ];
 
-const validateNotificationPreferences = [
-  body('preferences.notifications.email')
-    .optional()
-    .isBoolean()
-    .withMessage('Email notification preference must be a boolean'),
-  
-  body('preferences.notifications.push')
-    .optional()
-    .isBoolean()
-    .withMessage('Push notification preference must be a boolean'),
-  
-  body('preferences.notifications.sms')
-    .optional()
-    .isBoolean()
-    .withMessage('SMS notification preference must be a boolean')
-];
-
 const validateItem = [
   body('title')
     .trim()
@@ -393,6 +376,95 @@ const validateItemUpdate = [
     .withMessage('Each tag must be between 2 and 20 characters')
 ];
 
+const validateVerificationSubmission = [
+  body('documents')
+    .isArray({ min: 1, max: 5 })
+    .withMessage('At least 1 and at most 5 documents are required'),
+  
+  body('documents.*.filename')
+    .notEmpty()
+    .withMessage('Document filename is required')
+    .isLength({ max: 255 })
+    .withMessage('Filename cannot exceed 255 characters'),
+  
+  body('documents.*.url')
+    .isURL()
+    .withMessage('Document URL must be valid'),
+  
+  body('documents.*.key')
+    .notEmpty()
+    .withMessage('Document key is required'),
+  
+  body('documents.*.type')
+    .isIn(['id', 'passport', 'driver_license', 'utility_bill', 'bank_statement', 'other'])
+    .withMessage('Document type must be one of: id, passport, driver_license, utility_bill, bank_statement, other')
+];
+
+const validateNotificationPreferences = [
+  body('preferences.notifications.email')
+    .optional()
+    .isBoolean()
+    .withMessage('Email notification preference must be a boolean'),
+  
+  body('preferences.notifications.push')
+    .optional()
+    .isBoolean()
+    .withMessage('Push notification preference must be a boolean'),
+  
+  body('preferences.notifications.sms')
+    .optional()
+    .isBoolean()
+    .withMessage('SMS notification preference must be a boolean')
+];
+
+const validateNotificationQuery = [
+  query('page')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Page must be a positive integer'),
+  
+  query('limit')
+    .optional()
+    .isInt({ min: 1, max: 100 })
+    .withMessage('Limit must be between 1 and 100'),
+  
+  query('type')
+    .optional()
+    .isIn([
+      'order_created', 'order_confirmed', 'order_shipped', 'order_delivered', 'order_cancelled',
+      'payment_received', 'payment_failed', 'payment_refunded',
+      'item_sold', 'item_viewed', 'item_favorited', 'item_expired',
+      'message_received', 'message_sent',
+      'review_received', 'review_approved', 'review_rejected',
+      'account_verified', 'password_changed', 'email_verified',
+      'system_maintenance', 'system_update', 'feature_announcement',
+      'dispute_opened', 'dispute_resolved',
+      'admin_action', 'account_suspended', 'account_activated',
+      'promotional', 'reminder', 'alert'
+    ])
+    .withMessage('Invalid notification type'),
+  
+  query('category')
+    .optional()
+    .isIn(['transaction', 'communication', 'account', 'system', 'marketing', 'security'])
+    .withMessage('Invalid notification category'),
+  
+  query('priority')
+    .optional()
+    .isIn(['low', 'normal', 'high', 'urgent'])
+    .withMessage('Invalid notification priority'),
+  
+  query('unreadOnly')
+    .optional()
+    .isBoolean()
+    .withMessage('Unread only must be a boolean'),
+  
+  query('includeArchived')
+    .optional()
+    .isBoolean()
+    .withMessage('Include archived must be a boolean')
+];
+
 module.exports = {
   validateRegistration,
   validateLogin,
@@ -407,5 +479,7 @@ module.exports = {
   validateEmailChange,
   validateNotificationPreferences,
   validateItem,
-  validateItemUpdate
+  validateItemUpdate,
+  validateVerificationSubmission,
+  validateNotificationQuery
 };

@@ -455,7 +455,7 @@ notificationSchema.statics.getNotificationStats = function(userId = null, dateRa
   const matchStage = { isArchived: false };
   
   if (userId) {
-    matchStage.user = mongoose.Types.ObjectId(userId);
+    matchStage.user = new mongoose.Types.ObjectId(userId);
   }
   
   if (dateRange) {
