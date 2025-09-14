@@ -296,6 +296,71 @@ class FileUploadController {
       });
     }
   }
+
+  /**
+   * Generate presigned URL for avatar upload
+   * @route POST /api/upload/presigned-url/avatar
+   */
+  async generateAvatarPresignedUrl(req, res) {
+    try {
+      const { fileName, mimeType = 'image/jpeg' } = req.body;
+      const userId = req.user.id;
+
+      if (!fileName) {
+        return res.status(400).json({
+          success: false,
+          error: 'File name is required'
+        });
+      }
+
+      const result = await s3Service.generateAvatarPresignedUrl(fileName, userId, mimeType);
+
+      res.status(200).json({
+        success: true,
+        message: 'Avatar presigned URL generated successfully',
+        data: result
+      });
+
+    } catch (error) {
+      logger.error('Avatar presigned URL generation error:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  /**
+   * Generate presigned URL for item image upload
+   * @route POST /api/upload/presigned-url/item-image
+   */
+  async generateItemImagePresignedUrl(req, res) {
+    try {
+      const { fileName, itemId, mimeType = 'image/jpeg' } = req.body;
+
+      if (!fileName || !itemId) {
+        return res.status(400).json({
+          success: false,
+          error: 'File name and item ID are required'
+        });
+      }
+
+      const result = await s3Service.generateItemImagePresignedUrl(fileName, itemId, mimeType);
+
+      res.status(200).json({
+        success: true,
+        message: 'Item image presigned URL generated successfully',
+        data: result
+      });
+
+    } catch (error) {
+      logger.error('Item image presigned URL generation error:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
 }
 
 module.exports = new FileUploadController();

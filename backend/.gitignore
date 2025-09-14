@@ -101,3 +101,6 @@ README.md
 
 seed.js
 utils/seeders.js
+
+quick-test.js
+test-runner.js

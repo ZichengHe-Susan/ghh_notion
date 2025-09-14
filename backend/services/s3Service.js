@@ -293,6 +293,297 @@ class S3Service {
       throw new Error(`Failed to list files from S3: ${error.message}`);
     }
   }
+
+  /**
+   * Upload avatar image
+   * @param {Buffer} fileBuffer
+   * @param {string} fileName - Original file name
+   * @param {string} userId - User ID for folder organization
+   * @param {string} mimeType - File MIME type
+   * @returns {Promise<Object>} Upload result with URL
+   */
+  async uploadAvatar(fileBuffer, fileName, userId, mimeType = 'image/jpeg') {
+    try {
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+      if (!allowedTypes.includes(mimeType)) {
+        throw new Error(`Invalid file type for avatar. Allowed types: ${allowedTypes.join(', ')}`);
+      }
+
+      const maxSize = 2 * 1024 * 1024; // 2MB
+      if (fileBuffer.length > maxSize) {
+        throw new Error('Avatar file size cannot exceed 2MB');
+      }
+
+      const timestamp = Date.now();
+      const randomString = Math.random().toString(36).substring(2, 15);
+      const fileExtension = fileName.split('.').pop();
+      const uniqueFileName = `avatar-${timestamp}-${randomString}.${fileExtension}`;
+      
+      const key = `avatars/${userId}/${uniqueFileName}`;
+
+      const uploadParams = {
+        Bucket: this.bucketName,
+        Key: key,
+        Body: fileBuffer,
+        ContentType: mimeType,
+        Metadata: {
+          originalName: fileName,
+          uploadedAt: new Date().toISOString(),
+          type: 'avatar',
+          userId: userId
+        }
+      };
+
+      const command = new PutObjectCommand(uploadParams);
+      const result = await s3Client.send(command);
+      
+      const fileUrl = `${this.bucketUrl}/${key}`;
+      logger.info(`Avatar uploaded to S3: ${fileUrl}`);
+      
+      return {
+        success: true,
+        url: fileUrl,
+        key: key,
+        bucket: this.bucketName,
+        originalName: fileName,
+        size: fileBuffer.length,
+        type: 'avatar'
+      };
+
+    } catch (error) {
+      logger.error('S3 avatar upload error:', error);
+      throw new Error(`Failed to upload avatar to S3: ${error.message}`);
+    }
+  }
+
+  /**
+   * Upload item image with specific validation
+   * @param {Buffer} fileBuffer - File buffer
+   * @param {string} fileName - Original file name
+   * @param {string} itemId - Item ID for folder organization
+   * @param {string} mimeType - File MIME type
+   * @returns {Promise<Object>} Upload result with URL
+   */
+  async uploadItemImage(fileBuffer, fileName, itemId, mimeType = 'image/jpeg') {
+    try {
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+      if (!allowedTypes.includes(mimeType)) {
+        throw new Error(`Invalid file type for item image. Allowed types: ${allowedTypes.join(', ')}`);
+      }
+
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (fileBuffer.length > maxSize) {
+        throw new Error('Item image file size cannot exceed 5MB');
+      }
+
+      const timestamp = Date.now();
+      const randomString = Math.random().toString(36).substring(2, 15);
+      const fileExtension = fileName.split('.').pop();
+      const uniqueFileName = `item-${timestamp}-${randomString}.${fileExtension}`;
+      
+      const key = `items/${itemId}/${uniqueFileName}`;
+
+      const uploadParams = {
+        Bucket: this.bucketName,
+        Key: key,
+        Body: fileBuffer,
+        ContentType: mimeType,
+        Metadata: {
+          originalName: fileName,
+          uploadedAt: new Date().toISOString(),
+          type: 'item-image',
+          itemId: itemId
+        }
+      };
+
+      const command = new PutObjectCommand(uploadParams);
+      const result = await s3Client.send(command);
+      
+      const fileUrl = `${this.bucketUrl}/${key}`;
+      logger.info(`Item image uploaded to S3: ${fileUrl}`);
+      
+      return {
+        success: true,
+        url: fileUrl,
+        key: key,
+        bucket: this.bucketName,
+        originalName: fileName,
+        size: fileBuffer.length,
+        type: 'item-image'
+      };
+
+    } catch (error) {
+      logger.error('S3 item image upload error:', error);
+      throw new Error(`Failed to upload item image to S3: ${error.message}`);
+    }
+  }
+
+  /**
+   * Generate presigned URL for avatar upload
+   * @param {string} fileName - Original file name
+   * @param {string} userId - User ID
+   * @param {string} mimeType - File MIME type
+   * @param {number} expiresIn - URL expiration time in seconds (default: 300)
+   * @returns {Promise<Object>} Presigned URL and fields
+   */
+  async generateAvatarPresignedUrl(fileName, userId, mimeType = 'image/jpeg', expiresIn = 300) {
+    try {
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+      if (!allowedTypes.includes(mimeType)) {
+        throw new Error(`Invalid file type for avatar. Allowed types: ${allowedTypes.join(', ')}`);
+      }
+
+      const timestamp = Date.now();
+      const randomString = Math.random().toString(36).substring(2, 15);
+      const fileExtension = fileName.split('.').pop();
+      const uniqueFileName = `avatar-${timestamp}-${randomString}.${fileExtension}`;
+      
+      const key = `avatars/${userId}/${uniqueFileName}`;
+
+      const params = {
+        Bucket: this.bucketName,
+        Key: key,
+        ContentType: mimeType,
+        Metadata: {
+          originalName: fileName,
+          uploadedAt: new Date().toISOString(),
+          type: 'avatar',
+          userId: userId
+        }
+      };
+
+      const command = new PutObjectCommand(params);
+      const presignedUrl = await getSignedUrl(s3Client, command, { expiresIn });
+      
+      return {
+        success: true,
+        presignedUrl,
+        key,
+        fields: {
+          key,
+          'Content-Type': mimeType
+        }
+      };
+
+    } catch (error) {
+      logger.error('S3 avatar presigned URL error:', error);
+      throw new Error(`Failed to generate avatar presigned URL: ${error.message}`);
+    }
+  }
+
+  /**
+   * Generate presigned URL for item image upload
+   * @param {string} fileName - Original file name
+   * @param {string} itemId - Item ID
+   * @param {string} mimeType - File MIME type
+   * @param {number} expiresIn - URL expiration time in seconds (default: 300)
+   * @returns {Promise<Object>} Presigned URL and fields
+   */
+  async generateItemImagePresignedUrl(fileName, itemId, mimeType = 'image/jpeg', expiresIn = 300) {
+    try {
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+      if (!allowedTypes.includes(mimeType)) {
+        throw new Error(`Invalid file type for item image. Allowed types: ${allowedTypes.join(', ')}`);
+      }
+
+      const timestamp = Date.now();
+      const randomString = Math.random().toString(36).substring(2, 15);
+      const fileExtension = fileName.split('.').pop();
+      const uniqueFileName = `item-${timestamp}-${randomString}.${fileExtension}`;
+      
+      const key = `items/${itemId}/${uniqueFileName}`;
+
+      const params = {
+        Bucket: this.bucketName,
+        Key: key,
+        ContentType: mimeType,
+        Metadata: {
+          originalName: fileName,
+          uploadedAt: new Date().toISOString(),
+          type: 'item-image',
+          itemId: itemId
+        }
+      };
+
+      const command = new PutObjectCommand(params);
+      const presignedUrl = await getSignedUrl(s3Client, command, { expiresIn });
+      
+      return {
+        success: true,
+        presignedUrl,
+        key,
+        fields: {
+          key,
+          'Content-Type': mimeType
+        }
+      };
+
+    } catch (error) {
+      logger.error('S3 item image presigned URL error:', error);
+      throw new Error(`Failed to generate item image presigned URL: ${error.message}`);
+    }
+  }
+
+  /**
+   * Delete all files in a folder (for cleanup)
+   * @param {string} folder - Folder path in S3
+   * @returns {Promise<Object>} Delete result
+   */
+  async deleteFolder(folder) {
+    try {
+      const listResult = await this.listFiles(folder);
+      
+      if (listResult.files.length === 0) {
+        return {
+          success: true,
+          message: 'No files found in folder',
+          deleted: []
+        };
+      }
+
+      const keys = listResult.files.map(file => file.key);
+      const deleteResult = await this.deleteMultipleFiles(keys);
+      
+      logger.info(`Deleted folder ${folder} with ${deleteResult.deleted.length} files`);
+      
+      return {
+        success: true,
+        message: `Deleted folder ${folder}`,
+        deleted: deleteResult.deleted,
+        errors: deleteResult.errors
+      };
+
+    } catch (error) {
+      logger.error('S3 delete folder error:', error);
+      throw new Error(`Failed to delete folder from S3: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get file size and type information
+   * @param {string} key - S3 object key
+   * @returns {Promise<Object>} File information
+   */
+  async getFileInfo(key) {
+    try {
+      const metadata = await this.getFileMetadata(key);
+      
+      return {
+        success: true,
+        info: {
+          key,
+          size: metadata.metadata.size,
+          contentType: metadata.metadata.contentType,
+          lastModified: metadata.metadata.lastModified,
+          url: `${this.bucketUrl}/${key}`
+        }
+      };
+
+    } catch (error) {
+      logger.error('S3 get file info error:', error);
+      throw new Error(`Failed to get file info from S3: ${error.message}`);
+    }
+  }
 }
 
 module.exports = new S3Service();
