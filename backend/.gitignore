@@ -94,3 +94,10 @@ coverage/
 
 build/
 dist/
+
+
+docs/
+README.md
+
+seed.js
+utils/seeders.js
