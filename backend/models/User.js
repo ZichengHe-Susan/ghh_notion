@@ -49,6 +49,12 @@ const userSchema = new mongoose.Schema({
     type: String,
     select: false
   },
+  stripeCustomerId: {
+    type: String,
+    default: null,
+    unique: true,
+    sparse: true // Allows multiple null values
+  },
   passwordResetExpires: {
     type: Date,
     select: false

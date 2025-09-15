@@ -12,6 +12,8 @@
     "test:phase-2-2": "node tests/integration/phase-2-2.test.js",
     "test:quick": "node tests/integration/quick-test.js",
     "test:run": "node tests/integration/test-runner.js",
+    "test:mongodb": "node tests/integration/mongodb-config.test.js",
+    "test:mongodb:demo": "node tests/demo-mongodb-tests.js",
     "seed": "node seed.js seed",
     "seed:clear": "node seed.js clear",
     "seed:reset": "node seed.js reset"
