@@ -5,6 +5,7 @@ import { Typography, Button, TextField, Grid, Link, Box, Container } from '@mui/
 import { useNavigate } from 'react-router-dom'; 
 import Home from './Home';
 import Item from '../Item';
+import { secureLog } from '../utils/secureLogger';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -48,7 +49,7 @@ const Login = () => {
         role: 'user'
       };
 
-      console.log('Preparing registration data:', userData);
+      secureLog('Preparing registration data:', userData);
       const result = await register(userData);
       if (result.success) {
         setError('Registration successful');

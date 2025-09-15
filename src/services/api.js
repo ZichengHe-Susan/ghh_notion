@@ -1,5 +1,6 @@
 // API service layer for backend communication
 import config from '../config/environment';
+import { secureLog } from '../utils/secureLogger';
 
 const API_BASE_URL = config.API_URL;
 
@@ -85,6 +86,7 @@ class ApiService {
 
   // Authentication methods
   async login(email, password) {
+    secureLog('Logging in user:', { email }); // Only log email, not password
     return this.request('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
@@ -92,7 +94,8 @@ class ApiService {
   }
 
   async register(userData) {
-    console.log('Registering user with data:', userData);
+    // Log registration data securely (passwords will be redacted)
+    secureLog('Registering user with data:', userData);
     return this.request('/auth/register', {
       method: 'POST',
       body: JSON.stringify(userData),

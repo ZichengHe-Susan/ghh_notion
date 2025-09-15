@@ -2,11 +2,13 @@ const User = require('../models/User');
 const { generateTokenPair, hashToken, generateEmailVerificationToken, generatePasswordResetToken } = require('../utils/jwt');
 const emailService = require('../services/emailService');
 const { validationResult } = require('express-validator');
+const { secureLog } = require('../utils/secureLogger');
 
 const authController = {
   register: async (req, res) => {
     try {
-      console.log('Registration request body:', req.body);
+      // Log registration data securely (passwords will be redacted)
+      secureLog('Registration request body:', req.body);
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         console.log('Validation errors:', errors.array());
@@ -84,6 +86,8 @@ const authController = {
 
   login: async (req, res) => {
     try {
+      // Log login attempt securely (passwords will be redacted)
+      secureLog('Login attempt:', req.body);
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json({
