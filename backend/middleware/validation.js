@@ -587,6 +587,202 @@ const validateRefund = [
     .withMessage('Refund type must be either full or partial')
 ];
 
+const validateReview = [
+  body('orderId')
+    .isMongoId()
+    .withMessage('Order ID must be a valid MongoDB ObjectId'),
+  
+  body('rating')
+    .isInt({ min: 1, max: 5 })
+    .withMessage('Rating must be between 1 and 5'),
+  
+  body('title')
+    .trim()
+    .notEmpty()
+    .withMessage('Review title is required')
+    .isLength({ min: 5, max: 100 })
+    .withMessage('Title must be between 5 and 100 characters'),
+  
+  body('comment')
+    .trim()
+    .notEmpty()
+    .withMessage('Review comment is required')
+    .isLength({ min: 10, max: 1000 })
+    .withMessage('Comment must be between 10 and 1000 characters'),
+  
+  body('images')
+    .optional()
+    .isArray({ max: 5 })
+    .withMessage('Maximum 5 images allowed'),
+  
+  body('images.*.url')
+    .optional()
+    .isURL()
+    .withMessage('Image URL must be valid'),
+  
+  body('images.*.alt')
+    .optional()
+    .trim()
+    .isLength({ max: 100 })
+    .withMessage('Image alt text cannot exceed 100 characters'),
+  
+  body('type')
+    .optional()
+    .isIn(['buyer_to_seller', 'seller_to_buyer'])
+    .withMessage('Review type must be either buyer_to_seller or seller_to_buyer'),
+  
+  body('anonymous')
+    .optional()
+    .isBoolean()
+    .withMessage('Anonymous must be a boolean'),
+  
+  body('categoryRatings')
+    .optional()
+    .isObject()
+    .withMessage('Category ratings must be an object'),
+  
+  body('categoryRatings.communication')
+    .optional()
+    .isInt({ min: 1, max: 5 })
+    .withMessage('Communication rating must be between 1 and 5'),
+  
+  body('categoryRatings.itemCondition')
+    .optional()
+    .isInt({ min: 1, max: 5 })
+    .withMessage('Item condition rating must be between 1 and 5'),
+  
+  body('categoryRatings.shipping')
+    .optional()
+    .isInt({ min: 1, max: 5 })
+    .withMessage('Shipping rating must be between 1 and 5'),
+  
+  body('categoryRatings.value')
+    .optional()
+    .isInt({ min: 1, max: 5 })
+    .withMessage('Value rating must be between 1 and 5')
+];
+
+const validateReviewUpdate = [
+  body('rating')
+    .optional()
+    .isInt({ min: 1, max: 5 })
+    .withMessage('Rating must be between 1 and 5'),
+  
+  body('title')
+    .optional()
+    .trim()
+    .isLength({ min: 5, max: 100 })
+    .withMessage('Title must be between 5 and 100 characters'),
+  
+  body('comment')
+    .optional()
+    .trim()
+    .isLength({ min: 10, max: 1000 })
+    .withMessage('Comment must be between 10 and 1000 characters'),
+  
+  body('categoryRatings')
+    .optional()
+    .isObject()
+    .withMessage('Category ratings must be an object'),
+  
+  body('categoryRatings.communication')
+    .optional()
+    .isInt({ min: 1, max: 5 })
+    .withMessage('Communication rating must be between 1 and 5'),
+  
+  body('categoryRatings.itemCondition')
+    .optional()
+    .isInt({ min: 1, max: 5 })
+    .withMessage('Item condition rating must be between 1 and 5'),
+  
+  body('categoryRatings.shipping')
+    .optional()
+    .isInt({ min: 1, max: 5 })
+    .withMessage('Shipping rating must be between 1 and 5'),
+  
+  body('categoryRatings.value')
+    .optional()
+    .isInt({ min: 1, max: 5 })
+    .withMessage('Value rating must be between 1 and 5')
+];
+
+const validateReviewResponse = [
+  body('content')
+    .trim()
+    .notEmpty()
+    .withMessage('Response content is required')
+    .isLength({ min: 5, max: 500 })
+    .withMessage('Response must be between 5 and 500 characters')
+];
+
+const validateReviewReport = [
+  body('reason')
+    .trim()
+    .notEmpty()
+    .withMessage('Report reason is required')
+    .isLength({ min: 5, max: 200 })
+    .withMessage('Report reason must be between 5 and 200 characters')
+];
+
+const validateReviewModeration = [
+  body('status')
+    .isIn(['pending', 'approved', 'rejected', 'hidden'])
+    .withMessage('Status must be one of: pending, approved, rejected, hidden'),
+  
+  body('moderationNotes')
+    .optional()
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage('Moderation notes cannot exceed 500 characters'),
+  
+  body('flags')
+    .optional()
+    .isArray()
+    .withMessage('Flags must be an array'),
+  
+  body('flags.*')
+    .optional()
+    .isIn(['inappropriate', 'spam', 'fake', 'offensive', 'irrelevant'])
+    .withMessage('Invalid flag type')
+];
+
+const validateReviewQuery = [
+  query('page')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Page must be a positive integer'),
+  
+  query('limit')
+    .optional()
+    .isInt({ min: 1, max: 100 })
+    .withMessage('Limit must be between 1 and 100'),
+  
+  query('status')
+    .optional()
+    .isIn(['pending', 'approved', 'rejected', 'hidden'])
+    .withMessage('Invalid status value'),
+  
+  query('rating')
+    .optional()
+    .isInt({ min: 1, max: 5 })
+    .withMessage('Rating must be between 1 and 5'),
+  
+  query('type')
+    .optional()
+    .isIn(['buyer_to_seller', 'seller_to_buyer'])
+    .withMessage('Invalid review type'),
+  
+  query('sortBy')
+    .optional()
+    .isIn(['createdAt', 'rating', 'helpful', 'views'])
+    .withMessage('Invalid sort field'),
+  
+  query('sortOrder')
+    .optional()
+    .isIn(['asc', 'desc'])
+    .withMessage('Sort order must be asc or desc')
+];
+
 module.exports = {
   validateRegistration,
   validateLogin,
@@ -606,5 +802,11 @@ module.exports = {
   validateNotificationQuery,
   validateOrder,
   validateOrderStatusUpdate,
-  validateRefund
+  validateRefund,
+  validateReview,
+  validateReviewUpdate,
+  validateReviewResponse,
+  validateReviewReport,
+  validateReviewModeration,
+  validateReviewQuery
 };

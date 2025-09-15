@@ -113,4 +113,46 @@ router.get('/order-analytics', adminController.getOrderAnalytics);
 // @access  Private/Admin
 router.get('/system-health', adminController.getSystemHealth);
 
+// Review Moderation Routes
+
+// @route   GET /api/admin/reviews/pending
+// @desc    Get reviews pending moderation
+// @access  Private/Admin
+router.get('/reviews/pending', adminController.getPendingReviews);
+
+// @route   GET /api/admin/reviews/flagged
+// @desc    Get flagged reviews
+// @access  Private/Admin
+router.get('/reviews/flagged', adminController.getFlaggedReviews);
+
+// @route   GET /api/admin/reviews/moderation-stats
+// @desc    Get review moderation statistics
+// @access  Private/Admin
+router.get('/reviews/moderation-stats', adminController.getModerationStats);
+
+// @route   GET /api/admin/reviews/analytics
+// @desc    Get review analytics for admin dashboard
+// @access  Private/Admin
+router.get('/reviews/analytics', adminController.getReviewAnalytics);
+
+// @route   GET /api/admin/reviews/user/:userId/analytics
+// @desc    Get user review analytics
+// @access  Private/Admin
+router.get('/reviews/user/:userId/analytics', adminController.getUserReviewAnalytics);
+
+// @route   GET /api/admin/sellers/:sellerId/performance
+// @desc    Get seller performance summary
+// @access  Private/Admin
+router.get('/sellers/:sellerId/performance', adminController.getSellerPerformance);
+
+// @route   PUT /api/admin/reviews/:id/moderate
+// @desc    Moderate a review
+// @access  Private/Admin
+router.put('/reviews/:id/moderate', adminController.moderateReview);
+
+// @route   POST /api/admin/reviews/bulk-moderate
+// @desc    Bulk moderate reviews
+// @access  Private/Admin
+router.post('/reviews/bulk-moderate', adminController.bulkModerateReviews);
+
 module.exports = router;
