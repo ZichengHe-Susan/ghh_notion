@@ -19,16 +19,24 @@ const ViewItems = () => {
         const result = await apiService.getItems();
         console.log('Items API response:', result);
         
-        if (result.success && result.data && result.data.items && Array.isArray(result.data.items)) {
-          // Filter available items - check for proper availability structure
-          const filteredData = result.data.items.filter(item => 
-            item.status === 'active' && 
-            item.availability && 
-            item.availability.status === 'available' && 
-            item.availability.quantity > 0
-          );
-          console.log('Filtered items:', filteredData.length);
-          setItemsList(filteredData);
+        if (result.success && result.data) {
+          // Handle nested data structure - check if data.data exists
+          const actualData = result.data.data || result.data;
+          
+          if (actualData && actualData.items && Array.isArray(actualData.items)) {
+            // Filter available items - check for proper availability structure
+            const filteredData = actualData.items.filter(item => 
+              item.status === 'active' && 
+              item.availability && 
+              item.availability.status === 'available' && 
+              item.availability.quantity > 0
+            );
+            console.log('Filtered items:', filteredData.length);
+            setItemsList(filteredData);
+          } else {
+            console.error("Invalid items structure in response:", actualData);
+            setItemsList([]);
+          }
         } else {
           // Handle different error scenarios
           if (result.success === false) {
