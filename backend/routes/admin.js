@@ -92,4 +92,25 @@ router.post('/moderate-content', adminController.moderateContent);
 // @access  Private/Admin
 router.post('/resolve-dispute', adminController.resolveDispute);
 
+// Order Lifecycle Management Routes
+// @route   GET /api/admin/order-lifecycle/stats
+// @desc    Get order lifecycle statistics
+// @access  Private/Admin
+router.get('/order-lifecycle/stats', adminController.getOrderLifecycleStats);
+
+// @route   POST /api/admin/order-lifecycle/trigger-processing
+// @desc    Manually trigger order lifecycle processing
+// @access  Private/Admin
+router.post('/order-lifecycle/trigger-processing', adminController.triggerOrderLifecycleProcessing);
+
+// @route   GET /api/admin/order-analytics
+// @desc    Get detailed order analytics
+// @access  Private/Admin
+router.get('/order-analytics', adminController.getOrderAnalytics);
+
+// @route   GET /api/admin/system-health
+// @desc    Get system health status
+// @access  Private/Admin
+router.get('/system-health', adminController.getSystemHealth);
+
 module.exports = router;

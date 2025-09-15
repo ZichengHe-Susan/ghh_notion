@@ -14,6 +14,8 @@
     "test:run": "node tests/integration/test-runner.js",
     "test:mongodb": "node tests/integration/mongodb-config.test.js",
     "test:mongodb:demo": "node tests/demo-mongodb-tests.js",
+    "test:order-management": "node tests/test-order-management.js",
+    "test:db": "node tests/test-db-connection.js",
     "seed": "node seed.js seed",
     "seed:clear": "node seed.js clear",
     "seed:reset": "node seed.js reset"

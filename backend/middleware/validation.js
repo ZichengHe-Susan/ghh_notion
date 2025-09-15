@@ -465,6 +465,128 @@ const validateNotificationQuery = [
     .withMessage('Include archived must be a boolean')
 ];
 
+const validateOrder = [
+  body('items')
+    .isArray({ min: 1 })
+    .withMessage('At least one item is required'),
+  
+  body('items.*.itemId')
+    .isMongoId()
+    .withMessage('Item ID must be a valid MongoDB ObjectId'),
+  
+  body('items.*.quantity')
+    .isInt({ min: 1 })
+    .withMessage('Quantity must be a positive integer'),
+  
+  body('shippingAddress')
+    .isObject()
+    .withMessage('Shipping address is required'),
+  
+  body('shippingAddress.street')
+    .trim()
+    .notEmpty()
+    .withMessage('Street address is required')
+    .isLength({ max: 200 })
+    .withMessage('Street address cannot exceed 200 characters'),
+  
+  body('shippingAddress.city')
+    .trim()
+    .notEmpty()
+    .withMessage('City is required')
+    .isLength({ max: 50 })
+    .withMessage('City cannot exceed 50 characters'),
+  
+  body('shippingAddress.state')
+    .trim()
+    .notEmpty()
+    .withMessage('State is required')
+    .isLength({ max: 50 })
+    .withMessage('State cannot exceed 50 characters'),
+  
+  body('shippingAddress.zipCode')
+    .trim()
+    .notEmpty()
+    .withMessage('ZIP code is required')
+    .matches(/^\d{5}(-\d{4})?$/)
+    .withMessage('ZIP code must be in format 12345 or 12345-6789'),
+  
+  body('shippingAddress.country')
+    .optional()
+    .trim()
+    .isLength({ max: 50 })
+    .withMessage('Country cannot exceed 50 characters'),
+  
+  body('shippingAddress.phone')
+    .optional()
+    .isMobilePhone()
+    .withMessage('Please provide a valid phone number'),
+  
+  body('shippingAddress.instructions')
+    .optional()
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage('Shipping instructions cannot exceed 500 characters'),
+  
+  body('shippingMethod')
+    .optional()
+    .isIn(['standard', 'express', 'overnight', 'pickup'])
+    .withMessage('Shipping method must be one of: standard, express, overnight, pickup'),
+  
+  body('paymentMethod')
+    .optional()
+    .isIn(['stripe', 'paypal', 'bank_transfer'])
+    .withMessage('Payment method must be one of: stripe, paypal, bank_transfer'),
+  
+  body('notes')
+    .optional()
+    .trim()
+    .isLength({ max: 1000 })
+    .withMessage('Notes cannot exceed 1000 characters')
+];
+
+const validateOrderStatusUpdate = [
+  body('status')
+    .isIn(['pending', 'confirmed', 'paid', 'shipped', 'delivered', 'completed', 'cancelled', 'disputed'])
+    .withMessage('Invalid order status'),
+  
+  body('trackingNumber')
+    .optional()
+    .trim()
+    .isLength({ min: 5, max: 50 })
+    .withMessage('Tracking number must be between 5 and 50 characters'),
+  
+  body('carrier')
+    .optional()
+    .trim()
+    .isLength({ min: 2, max: 50 })
+    .withMessage('Carrier must be between 2 and 50 characters'),
+  
+  body('note')
+    .optional()
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage('Note cannot exceed 500 characters')
+];
+
+const validateRefund = [
+  body('amount')
+    .optional()
+    .isFloat({ min: 0 })
+    .withMessage('Refund amount must be a non-negative number'),
+  
+  body('reason')
+    .trim()
+    .notEmpty()
+    .withMessage('Refund reason is required')
+    .isLength({ max: 500 })
+    .withMessage('Refund reason cannot exceed 500 characters'),
+  
+  body('refundType')
+    .optional()
+    .isIn(['full', 'partial'])
+    .withMessage('Refund type must be either full or partial')
+];
+
 module.exports = {
   validateRegistration,
   validateLogin,
@@ -481,5 +603,8 @@ module.exports = {
   validateItem,
   validateItemUpdate,
   validateVerificationSubmission,
-  validateNotificationQuery
+  validateNotificationQuery,
+  validateOrder,
+  validateOrderStatusUpdate,
+  validateRefund
 };

@@ -26,9 +26,17 @@ const adminRoutes = require('./routes/admin');
 const uploadRoutes = require('./routes/upload');
 const notificationRoutes = require('./routes/notifications');
 
+// Import services
+const orderLifecycleService = require('./services/orderLifecycleService');
+const notificationService = require('./services/notificationService');
+
 const app = express();
 
 connectDB();
+
+// Start background services
+orderLifecycleService.startProcessing();
+notificationService.startProcessing();
 
 app.set('trust proxy', 1);
 
@@ -106,11 +114,21 @@ app.use(errorHandler);
 
 process.on('SIGTERM', () => {
   logger.info('SIGTERM received. Shutting down gracefully...');
+  
+  // Stop background services
+  orderLifecycleService.stopProcessing();
+  notificationService.stopProcessing();
+  
   process.exit(0);
 });
 
 process.on('SIGINT', () => {
   logger.info('SIGINT received. Shutting down gracefully...');
+  
+  // Stop background services
+  orderLifecycleService.stopProcessing();
+  notificationService.stopProcessing();
+  
   process.exit(0);
 });
 

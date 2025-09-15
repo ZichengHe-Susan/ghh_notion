@@ -3,8 +3,11 @@ const escrowService = require('../services/escrowService');
 const Order = require('../models/Order');
 const Payment = require('../models/Payment');
 const User = require('../models/User');
+const Item = require('../models/Item');
+const notificationService = require('../services/notificationService');
 const logger = require('../config/logger');
 const { validationResult } = require('express-validator');
+const mongoose = require('mongoose');
 
 const paymentController = {
   /**
@@ -87,6 +90,9 @@ const paymentController = {
    * @access Private
    */
   confirmPayment: async (req, res) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -100,7 +106,7 @@ const paymentController = {
       const { paymentIntentId, paymentMethodId } = req.body;
       const userId = req.user.id;
 
-      const payment = await Payment.findOne({ paymentIntentId }).populate('order');
+      const payment = await Payment.findOne({ paymentIntentId }).populate('order').session(session);
       if (!payment) {
         return res.status(404).json({
           success: false,
@@ -115,29 +121,104 @@ const paymentController = {
         });
       }
 
+      const order = payment.order;
+      
+      // Check if order is still in pending status
+      if (order.status !== 'pending') {
+        return res.status(400).json({
+          success: false,
+          message: 'Order is no longer in pending status'
+        });
+      }
+
       const paymentIntent = await stripeService.confirmPayment(paymentIntentId, paymentMethodId);
 
       if (paymentIntent.status === 'succeeded') {
-        await escrowService.initializeEscrow(payment.order._id);
+        // Update order status to paid
+        await order.confirmPayment();
+        
+        // Update payment record
+        payment.status = 'succeeded';
+        payment.paidAt = new Date();
+        await payment.save({ session });
+
+        // Atomic inventory reduction - convert reserved items to sold
+        for (const orderItem of order.items) {
+          await Item.findByIdAndUpdate(
+            orderItem.item,
+            {
+              $set: { 
+                'availability.status': 'sold',
+                'availability.reservedUntil': null
+              }
+            },
+            { session }
+          );
+        }
+
+        // Initialize escrow
+        await escrowService.initializeEscrow(order._id);
+
+        // Send notifications
+        await notificationService.createOrderNotification(order, 'order_confirmed');
+        await notificationService.createOrderNotification(order, 'payment_received');
+
+        await session.commitTransaction();
+
+        res.json({
+          success: true,
+          message: 'Payment confirmed successfully',
+          data: {
+            status: paymentIntent.status,
+            orderId: order._id,
+            orderNumber: order.orderNumber,
+            orderStatus: order.status,
+            escrowStatus: order.escrow.status
+          }
+        });
+      } else {
+        // Payment failed
+        payment.status = 'failed';
+        await payment.save({ session });
+
+        // Release reserved inventory
+        for (const orderItem of order.items) {
+          await Item.findByIdAndUpdate(
+            orderItem.item,
+            {
+              $inc: { 'availability.quantity': orderItem.quantity },
+              $set: { 
+                'availability.status': 'available',
+                'availability.reservedUntil': null
+              }
+            },
+            { session }
+          );
+        }
+
+        await session.commitTransaction();
+
+        res.json({
+          success: false,
+          message: 'Payment failed',
+          data: {
+            status: paymentIntent.status,
+            orderId: order._id,
+            orderNumber: order.orderNumber
+          }
+        });
       }
 
-      res.json({
-        success: true,
-        message: 'Payment confirmed successfully',
-        data: {
-          status: paymentIntent.status,
-          orderId: payment.order._id,
-          orderNumber: payment.order.orderNumber
-        }
-      });
-
     } catch (error) {
+      await session.abortTransaction();
       logger.error('Error confirming payment:', error);
       res.status(500).json({
         success: false,
         message: 'Failed to confirm payment',
         error: error.message
       });
+    } finally {
+      session.endSession();
     }
   },
 
@@ -147,13 +228,104 @@ const paymentController = {
    * @access Public (Stripe only)
    */
   handleWebhook: async (req, res) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
     try {
       const signature = req.get('stripe-signature');
       const payload = JSON.stringify(req.body);
 
       const event = stripeService.verifyWebhookSignature(payload, signature);
 
+      // Process the webhook event
       const result = await stripeService.handleWebhookEvent(event);
+
+      // Handle order lifecycle updates based on payment events
+      if (event.type === 'payment_intent.succeeded') {
+        const paymentIntent = event.data.object;
+        const orderId = paymentIntent.metadata?.orderId;
+
+        if (orderId) {
+          const order = await Order.findById(orderId).session(session);
+          if (order && order.status === 'pending') {
+            // Update order status
+            await order.confirmPayment();
+            
+            // Update payment record
+            const payment = await Payment.findOne({ paymentIntentId: paymentIntent.id }).session(session);
+            if (payment) {
+              payment.status = 'succeeded';
+              payment.paidAt = new Date();
+              await payment.save({ session });
+            }
+
+            // Atomic inventory reduction
+            for (const orderItem of order.items) {
+              await Item.findByIdAndUpdate(
+                orderItem.item,
+                {
+                  $set: { 
+                    'availability.status': 'sold',
+                    'availability.reservedUntil': null
+                  }
+                },
+                { session }
+              );
+            }
+
+            // Initialize escrow
+            await escrowService.initializeEscrow(order._id);
+
+            // Send notifications
+            await notificationService.createOrderNotification(order, 'order_confirmed');
+            await notificationService.createOrderNotification(order, 'payment_received');
+          }
+        }
+      } else if (event.type === 'payment_intent.payment_failed') {
+        const paymentIntent = event.data.object;
+        const orderId = paymentIntent.metadata?.orderId;
+
+        if (orderId) {
+          const order = await Order.findById(orderId).session(session);
+          if (order && order.status === 'pending') {
+            // Release reserved inventory
+            for (const orderItem of order.items) {
+              await Item.findByIdAndUpdate(
+                orderItem.item,
+                {
+                  $inc: { 'availability.quantity': orderItem.quantity },
+                  $set: { 
+                    'availability.status': 'available',
+                    'availability.reservedUntil': null
+                  }
+                },
+                { session }
+              );
+            }
+
+            // Update payment record
+            const payment = await Payment.findOne({ paymentIntentId: paymentIntent.id }).session(session);
+            if (payment) {
+              payment.status = 'failed';
+              await payment.save({ session });
+            }
+
+            // Send notification
+            await notificationService.createOrderNotification(order, 'payment_failed');
+          }
+        }
+      } else if (event.type === 'charge.dispute.created') {
+        const charge = event.data.object;
+        const paymentIntentId = charge.payment_intent;
+        
+        const payment = await Payment.findOne({ paymentIntentId }).populate('order').session(session);
+        if (payment && payment.order) {
+          await payment.order.initiateDispute('Payment dispute created');
+          await notificationService.createOrderNotification(payment.order, 'dispute_opened');
+        }
+      }
+
+      await session.commitTransaction();
 
       res.json({
         success: true,
@@ -162,12 +334,15 @@ const paymentController = {
       });
 
     } catch (error) {
+      await session.abortTransaction();
       logger.error('Error handling webhook:', error);
       res.status(400).json({
         success: false,
         message: 'Webhook processing failed',
         error: error.message
       });
+    } finally {
+      session.endSession();
     }
   },
 
