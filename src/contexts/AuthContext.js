@@ -23,8 +23,9 @@ export const AuthProvider = ({ children }) => {
           // Verify token is still valid by getting profile
           const result = await apiService.getProfile();
           if (result.success) {
-            setCurrentUser({ id: result.data._id, email: result.data.email });
-            setUserData(result.data);
+            const profileData = result.data.data || result.data;
+            setCurrentUser({ id: profileData.user.id, email: profileData.user.email });
+            setUserData(profileData.user);
           } else {
             // Token might be expired, try to refresh
             if (refreshToken) {
@@ -32,8 +33,9 @@ export const AuthProvider = ({ children }) => {
               if (refreshResult.success) {
                 const profileResult = await apiService.getProfile();
                 if (profileResult.success) {
-                  setCurrentUser({ id: profileResult.data._id, email: profileResult.data.email });
-                  setUserData(profileResult.data);
+                  const profileData = profileResult.data.data || profileResult.data;
+                  setCurrentUser({ id: profileData.user.id, email: profileData.user.email });
+                  setUserData(profileData.user);
                 } else {
                   // Both token and refresh failed, clear auth
                   clearAuth();
@@ -69,8 +71,14 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const result = await apiService.login(email, password);
+      ////console.log('Full login result:', JSON.stringify(result, null, 2));
+      
       if (result.success) {
-        const { user, tokens } = result.data;
+        //console.log('Result data:', JSON.stringify(result.data, null, 2));
+
+        const { user, tokens } = result.data.data || result.data;
+        //console.log('Destructured user:', user);
+        //console.log('Destructured tokens:', tokens);
         
         // Set tokens
         apiService.setToken(tokens.accessToken);
@@ -93,8 +101,9 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       const result = await apiService.register(userData);
+      
       if (result.success) {
-        const { user, tokens } = result.data;
+        const { user, tokens } = result.data.data || result.data;
         
         // Set tokens
         apiService.setToken(tokens.accessToken);
@@ -128,7 +137,9 @@ export const AuthProvider = ({ children }) => {
     try {
       const result = await apiService.updateProfile(profileData);
       if (result.success) {
-        setUserData(result.data);
+        const responseData = result.data.data || result.data;
+        const userData = responseData.user || responseData;
+        setUserData(userData);
         return { success: true };
       } else {
         return { success: false, error: result.error };

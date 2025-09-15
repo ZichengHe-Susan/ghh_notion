@@ -125,8 +125,8 @@ class ApiService {
       body: JSON.stringify({ refreshToken }),
     });
 
-    if (result.success && result.data.token) {
-      this.setToken(result.data.token);
+    if (result.success && result.data.accessToken) {
+      this.setToken(result.data.accessToken);
       localStorage.setItem('refreshToken', result.data.refreshToken);
     }
 
