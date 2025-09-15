@@ -1,0 +1,279 @@
+/* Chat Button Container */
+.chat-button-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+/* Chat Button */
+.chat-button {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: none;
+  background: #007bff;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+.chat-button:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(0, 123, 255, 0.4);
+}
+
+.chat-button:active {
+  transform: scale(0.95);
+}
+
+.chat-button.has-unread {
+  animation: pulse 2s infinite;
+}
+
+.chat-button.disconnected {
+  background: #6c757d;
+  box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+}
+
+.chat-button.disconnected:hover {
+  box-shadow: 0 6px 16px rgba(108, 117, 125, 0.4);
+}
+
+/* Chat Icon */
+.chat-icon {
+  font-size: 24px;
+  line-height: 1;
+}
+
+/* Unread Badge */
+.unread-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: #dc3545;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 12px;
+  min-width: 18px;
+  text-align: center;
+  border: 2px solid #fff;
+  animation: bounce 1s ease-in-out;
+}
+
+/* Connection Indicator */
+.connection-indicator {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.connection-dot {
+  width: 8px;
+  height: 8px;
+  background: #dc3545;
+  border-radius: 50%;
+  animation: blink 1s infinite;
+}
+
+/* Tooltip */
+.chat-tooltip {
+  position: absolute;
+  bottom: 70px;
+  right: 0;
+  background: #333;
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+.chat-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  right: 20px;
+  border: 5px solid transparent;
+  border-top-color: #333;
+}
+
+.chat-button:hover + .chat-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Animations */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.6), 0 0 0 10px rgba(0, 123, 255, 0.1);
+  }
+  100% {
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+  }
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes blink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .chat-button-container {
+    bottom: 15px;
+    right: 15px;
+  }
+  
+  .chat-button {
+    width: 56px;
+    height: 56px;
+    font-size: 22px;
+  }
+  
+  .chat-icon {
+    font-size: 22px;
+  }
+  
+  .unread-badge {
+    font-size: 11px;
+    padding: 1px 5px;
+    min-width: 16px;
+  }
+  
+  .chat-tooltip {
+    bottom: 65px;
+    font-size: 11px;
+    padding: 6px 10px;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .chat-button {
+    border: 2px solid #000;
+  }
+  
+  .unread-badge {
+    border: 2px solid #000;
+  }
+  
+  .connection-indicator {
+    border: 1px solid #000;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .chat-button {
+    transition: none;
+  }
+  
+  .chat-button:hover {
+    transform: none;
+  }
+  
+  .chat-button.has-unread {
+    animation: none;
+  }
+  
+  .unread-badge {
+    animation: none;
+  }
+  
+  .connection-dot {
+    animation: none;
+  }
+  
+  .chat-tooltip {
+    transition: none;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .chat-button {
+    background: #0d6efd;
+  }
+  
+  .chat-button.disconnected {
+    background: #495057;
+  }
+  
+  .chat-tooltip {
+    background: #212529;
+  }
+  
+  .chat-tooltip::after {
+    border-top-color: #212529;
+  }
+}
+
+/* Focus styles for accessibility */
+.chat-button:focus {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.chat-button:focus-visible {
+  outline: 2px solid #007bff;
+  outline-offset: 2px;
+}
+
+/* Loading state */
+.chat-button.loading {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.chat-button.loading .chat-icon {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

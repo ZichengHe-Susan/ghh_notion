@@ -13,6 +13,9 @@ class NotificationService {
       const notification = new Notification(notificationData);
       await notification.save();
       
+      // Send real-time notification via Socket.IO
+      this.sendRealtimeNotification(notification);
+      
       if (!this.isProcessing) {
         this.startProcessing();
       }
@@ -28,6 +31,11 @@ class NotificationService {
     try {
       const notifications = await Notification.insertMany(notificationsData);
       
+      // Send real-time notifications for each
+      notifications.forEach(notification => {
+        this.sendRealtimeNotification(notification);
+      });
+      
       if (!this.isProcessing) {
         this.startProcessing();
       }
@@ -36,6 +44,28 @@ class NotificationService {
     } catch (error) {
       console.error('Create bulk notifications error:', error);
       throw error;
+    }
+  }
+
+  // Send real-time notification via Socket.IO
+  sendRealtimeNotification(notification) {
+    try {
+      if (global.io) {
+        global.io.to(`user_${notification.user}`).emit('new_notification', {
+          notification: {
+            _id: notification._id,
+            title: notification.title,
+            message: notification.message,
+            type: notification.type,
+            category: notification.category,
+            priority: notification.priority,
+            createdAt: notification.createdAt,
+            data: notification.data
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Send realtime notification error:', error);
     }
   }
 
@@ -498,6 +528,78 @@ class NotificationService {
     }
 
     return await this.createNotification(notificationData);
+  }
+
+  // Chat-specific notification methods
+  async createChatNotification(conversation, message, type, additionalData = {}) {
+    const otherParticipant = conversation.participants.find(
+      p => p.user.toString() !== message.sender.toString()
+    );
+
+    if (!otherParticipant) return null;
+
+    const notificationData = {
+      user: otherParticipant.user,
+      type: type,
+      category: 'communication',
+      priority: 'normal',
+      data: {
+        conversation: conversation._id,
+        message: message._id,
+        sender: message.sender,
+        ...additionalData
+      }
+    };
+
+    switch (type) {
+      case 'new_message':
+        notificationData.title = 'New Message';
+        notificationData.message = `You have a new message in "${conversation.subject}"`;
+        break;
+      case 'message_reaction':
+        notificationData.title = 'Message Reaction';
+        notificationData.message = `Someone reacted to your message`;
+        break;
+      case 'conversation_created':
+        notificationData.title = 'New Conversation';
+        notificationData.message = `A new conversation has been started: "${conversation.subject}"`;
+        break;
+      case 'order_update_in_chat':
+        notificationData.title = 'Order Update';
+        notificationData.message = `Order status updated in conversation`;
+        notificationData.priority = 'high';
+        break;
+    }
+
+    return await this.createNotification(notificationData);
+  }
+
+  async createTypingNotification(conversationId, userId, isTyping) {
+    try {
+      if (global.io) {
+        global.io.to(`conversation_${conversationId}`).emit('typing_indicator', {
+          userId,
+          isTyping,
+          conversationId
+        });
+      }
+    } catch (error) {
+      console.error('Send typing notification error:', error);
+    }
+  }
+
+  async createOnlineStatusNotification(userId, isOnline) {
+    try {
+      if (global.io) {
+        const event = isOnline ? 'user_online' : 'user_offline';
+        global.io.emit(event, {
+          userId,
+          timestamp: new Date()
+        });
+      }
+    } catch (error) {
+      console.error('Send online status notification error:', error);
+    }
   }
 }
 

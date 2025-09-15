@@ -6,6 +6,7 @@ const chatController = require('../controllers/chatController');
 
 // Import middleware
 const { auth } = require('../middleware/auth');
+const { uploadMultiple } = require('../middleware/upload');
 
 // @route   GET /api/chat/conversations
 // @desc    Get user's conversations
@@ -32,6 +33,11 @@ router.get('/conversations/:id/messages', auth, chatController.getMessages);
 // @access  Private
 router.post('/conversations/:id/messages', auth, chatController.sendMessage);
 
+// @route   POST /api/chat/conversations/:id/upload
+// @desc    Upload file for chat
+// @access  Private
+router.post('/conversations/:id/upload', auth, uploadMultiple('files', 5), chatController.uploadFile);
+
 // @route   PUT /api/chat/conversations/:id/read
 // @desc    Mark conversation as read
 // @access  Private
@@ -41,5 +47,20 @@ router.put('/conversations/:id/read', auth, chatController.markAsRead);
 // @desc    Delete conversation
 // @access  Private
 router.delete('/conversations/:id', auth, chatController.deleteConversation);
+
+// @route   GET /api/chat/unread-count
+// @desc    Get unread message count
+// @access  Private
+router.get('/unread-count', auth, chatController.getUnreadCount);
+
+// @route   GET /api/chat/search
+// @desc    Search conversations
+// @access  Private
+router.get('/search', auth, chatController.searchConversations);
+
+// @route   GET /api/chat/stats
+// @desc    Get conversation statistics
+// @access  Private
+router.get('/stats', auth, chatController.getStats);
 
 module.exports = router;
