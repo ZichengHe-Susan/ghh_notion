@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useCart } from '../contexts/CartContext';
 import apiService from '../services/api';
 import '../css/ViewItems.css';
 
@@ -8,21 +9,38 @@ const ViewItems = () => {
   const [itemsList, setItemsList] = useState([]);
   const [loading, setLoading] = useState(true);
   const { currentUser } = useAuth();
+  const { addToCart } = useCart();
 
   useEffect(() => {
     const getItemsList = async () => {
       try {
         setLoading(true);
+        console.log('Fetching items...');
         const result = await apiService.getItems();
-        if (result.success) {
-          // Filter available items
-          const filteredData = result.data.items.filter(item => item.isAvailable);
+        console.log('Items API response:', result);
+        
+        if (result.success && result.data && result.data.items && Array.isArray(result.data.items)) {
+          // Filter available items - check for proper availability structure
+          const filteredData = result.data.items.filter(item => 
+            item.status === 'active' && 
+            item.availability && 
+            item.availability.status === 'available' && 
+            item.availability.quantity > 0
+          );
+          console.log('Filtered items:', filteredData.length);
           setItemsList(filteredData);
         } else {
-          console.error("Error fetching items: ", result.error);
+          // Handle different error scenarios
+          if (result.success === false) {
+            console.error("API Error fetching items:", result.error || 'Unknown error');
+          } else {
+            console.error("Invalid response structure:", result);
+          }
+          setItemsList([]);
         }
       } catch (err) {
-        console.error("Error fetching items: ", err);
+        console.error("Network/Request Error fetching items:", err);
+        setItemsList([]);
       } finally {
         setLoading(false);
       }
@@ -31,14 +49,11 @@ const ViewItems = () => {
     getItemsList();
   }, []);  
 
-  const addToCart = async (item) => {
+  const handleAddToCart = async (item) => {
     try {
-      // For now, we'll just show an alert since cart functionality might not be fully implemented
-      // You can implement proper cart functionality later
-      alert(`${item.name} has been added to your cart!`);
+      await addToCart(item);
     } catch (error) {
       console.error('Error adding to cart:', error);
-      alert('Failed to add item to cart');
     }
   };
 
@@ -73,18 +88,24 @@ const ViewItems = () => {
       </div>
         
       <div className="container">
-        {itemsList.map((item) => (
+        {itemsList.length === 0 ? (
+          <div className="no-items-message">
+            <h3>No items available at the moment</h3>
+            <p>Check back later or add some items to the marketplace!</p>
+          </div>
+        ) : (
+          itemsList.map((item) => (
           <div key={item._id} className="itemBox">
             <div className="textContainer">
               <Link to={`/item/${item._id}`} className="itemTitle">
-                <h1 className="itemNameShop">{item.name}</h1>
+                <h1 className="itemNameShop">{item.title}</h1>
               </Link> 
               <p className="itemPrice">Price: ${item.price}</p>
               <div className="button-group">
               {currentUser && currentUser.id !== item.seller && 
                 (<button
                   className="addToCartButton" 
-                  onClick={() => addToCart(item)} 
+                  onClick={() => handleAddToCart(item)} 
                   >Add to Cart</button>)}
                   {currentUser && currentUser.id === item.seller && ( 
                   <button className="deleteButton" onClick={() => deleteItem(item._id)}>
@@ -95,13 +116,14 @@ const ViewItems = () => {
             </div>
             {item.images && item.images.length > 0 ? (
               <div className="imageContainer">
-                <img src={item.images[0]} alt={item.name} className="itemImage" />
+                <img src={item.images[0].url || item.images[0]} alt={item.title} className="itemImage" />
               </div>
             ) : (
               <p>No image available</p>
             )}          
           </div>
-        ))}
+        ))
+        )}
       </div>
     </div>
     

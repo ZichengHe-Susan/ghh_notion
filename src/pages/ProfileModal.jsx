@@ -27,11 +27,13 @@ const ProfileModal = ({ showProfile, handleClose }) => {
         try {
           setLoading(true);
           const result = await apiService.getItemsBySeller(currentUser.id);
-          if (result.success) {
-            setUserItems(result.data || []);
+          if (result.success && result.data) {
+            // Handle both array and object response structures
+            const items = Array.isArray(result.data) ? result.data : result.data.items || [];
+            setUserItems(items);
             
             // Count sold items (items with a buyer)
-            const soldCount = result.data.filter(item => item.buyer).length;
+            const soldCount = items.filter(item => item.buyer).length;
             setItemSold(soldCount);
             
             // For now, set bought items to 0 since we don't have a specific endpoint
@@ -39,9 +41,11 @@ const ProfileModal = ({ showProfile, handleClose }) => {
             setItemBought(0);
           } else {
             console.error('Error fetching user items:', result.error);
+            setUserItems([]);
           }
         } catch (err) {
           console.error('Error fetching user items:', err);
+          setUserItems([]);
         } finally {
           setLoading(false);
         }

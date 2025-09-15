@@ -334,6 +334,13 @@ class ApiService {
     });
   }
 
+  async updateCartItemQuantity(itemId, quantity) {
+    return this.request('/cart/update-quantity', {
+      method: 'PUT',
+      body: JSON.stringify({ itemId, quantity }),
+    });
+  }
+
   // Order methods (if implemented in backend)
   async createOrder(orderData) {
     return this.request('/orders', {

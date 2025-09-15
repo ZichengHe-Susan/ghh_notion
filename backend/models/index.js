@@ -8,6 +8,7 @@ const Message = require('./Message');
 const Review = require('./Review');
 const AdminLog = require('./AdminLog');
 const Notification = require('./Notification');
+const Cart = require('./Cart');
 
 module.exports = {
   User,
@@ -19,5 +20,6 @@ module.exports = {
   Message,
   Review,
   AdminLog,
-  Notification
+  Notification,
+  Cart
 };

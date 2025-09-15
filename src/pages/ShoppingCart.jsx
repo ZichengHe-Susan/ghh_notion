@@ -9,7 +9,7 @@ import apiService from '../services/api';
 const ShoppingCart = () => {
     const navigate = useNavigate();
     const { currentUser } = useAuth();
-    const { cartItems, removeFromCart, clearCart } = useCart();
+    const { cartItems, removeFromCart, clearCart, updateItemQuantity } = useCart();
     const [totalPrice, setTotalPrice] = useState(0);
     const [loading, setLoading] = useState(true);
 
@@ -21,7 +21,12 @@ const ShoppingCart = () => {
     
     useEffect(() => {
         if (currentUser && cartItems) {
-            const totalP = cartItems.reduce((acc, item) => acc + item.price, 0);
+            // Calculate total price considering quantity
+            const totalP = cartItems.reduce((acc, item) => {
+                const itemPrice = item.price || 0;
+                const quantity = item.quantity || 1;
+                return acc + (itemPrice * quantity);
+            }, 0);
             setTotalPrice(totalP);
             setLoading(false);
         }
@@ -99,9 +104,21 @@ const ShoppingCart = () => {
                     {cartItems.map((item, index) => (
                         <li key={item._id || item.id} className="cart-item">
                             <div className="item-info">
-                                <img src={(item.images && item.images[0]) || item.imageURL || defaultImage} alt={item.name} className='item-image' />
-                                <span className="item-title">{item.name}</span>
+                                <img src={(item.images && item.images[0]?.url) || (item.images && item.images[0]) || item.imageURL || defaultImage} alt={item.title || item.name} className='item-image' />
+                                <span className="item-title">{item.title || item.name}</span>
                                 <span className="item-price">${item.price}</span>
+                                <div className="quantity-controls">
+                                    <button 
+                                        className="quantity-btn" 
+                                        onClick={() => updateItemQuantity(item._id || item.id, (item.quantity || 1) - 1)}
+                                        disabled={!item.quantity || item.quantity <= 1}
+                                    >-</button>
+                                    <span className="item-quantity">{item.quantity || 1}</span>
+                                    <button 
+                                        className="quantity-btn" 
+                                        onClick={() => updateItemQuantity(item._id || item.id, (item.quantity || 1) + 1)}
+                                    >+</button>
+                                </div>
                             </div>
                             <div className="item-actions">
                                 <button className="item-remove" onClick={() => removeItem(item._id || item.id)}>Remove</button>

@@ -783,6 +783,27 @@ const validateReviewQuery = [
     .withMessage('Sort order must be asc or desc')
 ];
 
+// Cart validation middleware
+const validateCartOperation = [
+  body('itemId')
+    .notEmpty()
+    .withMessage('Item ID is required')
+    .isMongoId()
+    .withMessage('Invalid item ID format')
+];
+
+const validateCartQuantity = [
+  body('itemId')
+    .notEmpty()
+    .withMessage('Item ID is required')
+    .isMongoId()
+    .withMessage('Invalid item ID format'),
+  
+  body('quantity')
+    .isInt({ min: 0, max: 100 })
+    .withMessage('Quantity must be between 0 and 100')
+];
+
 module.exports = {
   validateRegistration,
   validateLogin,
@@ -808,5 +829,7 @@ module.exports = {
   validateReviewResponse,
   validateReviewReport,
   validateReviewModeration,
-  validateReviewQuery
+  validateReviewQuery,
+  validateCartOperation,
+  validateCartQuantity
 };
