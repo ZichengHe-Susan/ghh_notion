@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { signOut } from 'firebase/auth';
-import { auth } from '../firebase'; 
 import Item from '../Item';
 import DetailedItem from '../DetailedItem'; 
 import backgroundImage from '../assets/old-cabell.jpg';
@@ -14,7 +12,7 @@ import Copyright from '../components/Copyright';
 const Home = () => {
   const [scrollPosition, setScrollPosition] = useState(0);
   const [showDetails, setShowDetails] = useState(false);
-  const { currentUser, userData } = useAuth();
+  const { currentUser, userData, logout } = useAuth();
   const navigate = useNavigate(); 
   const [showProfile, setShowProfile] = useState(false);
 
@@ -44,7 +42,7 @@ const Home = () => {
 
   const handleLogout = async () => {
     try {
-      await signOut(auth); 
+      await logout(); 
       navigate('/login');
     } catch (error) {
       console.error('Failed to log out:', error);
@@ -67,23 +65,6 @@ const Home = () => {
     }
   };
 
-  // const items = [
-  //   {
-  //     id: 1,
-  //     image: 'path_to_image1.jpg',
-  //     title: 'Vintage Jacket',
-  //     description: 'A cool vintage jacket in excellent condition.',
-  //     price: 50,
-  //   },
-  //   {
-  //     id: 2,
-  //     image: 'path_to_image2.jpg',
-  //     title: 'Retro Sneakers',
-  //     description: 'Classic sneakers for all-day comfort.',
-  //     price: 75,
-  //   },
-  // ];
-
   const [selectedItem, setSelectedItem] = useState(null);
 
   const handleSelectItem = (item) => {
@@ -102,7 +83,7 @@ const Home = () => {
         <h1>Welcome to the UVA Thrift Store</h1>
       </header>
 
-      <div class="button-container">
+      <div className="button-container">
         <button onClick={handleUpload}>Add Item</button>
         <button onClick={() => setShowProfile(true)}>Profile</button> 
         <button onClick={navigateCart}>Shopping Cart</button>
@@ -113,13 +94,6 @@ const Home = () => {
       <ViewItems />
       </div>
 
-      {/* {selectedItem ? (
-        <DetailedItem item={selectedItem} />
-      ) : (
-        items.map((item) => (
-          <Item key={item.id} {...item} onClick={() => handleSelectItem(item)} />
-        ))
-      )} */}
       <Copyright/>
 
       <ProfileModal showProfile={showProfile} handleClose={() => setShowProfile(false)} />

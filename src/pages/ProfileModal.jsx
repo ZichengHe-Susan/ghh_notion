@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Typography, Button, Tabs, Tab, Box } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
-import { db } from '../firebase'; 
-import { getDocs, collection } from 'firebase/firestore';
+import apiService from '../services/api';
 import ListedItems from '../components/ListedItems'; // Import the refactored ListedItems component
 import OrderHistory from '../components/OrderHistory';
 import EditProfile from '../components/EditProfile';
@@ -16,6 +15,7 @@ const ProfileModal = ({ showProfile, handleClose }) => {
   const [activeTab, setActiveTab] = useState(0); // State to track active tab
   const [itemBought, setItemBought] = useState(0);
   const [itemSold, setItemSold] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setOpen(showProfile);
@@ -25,33 +25,25 @@ const ProfileModal = ({ showProfile, handleClose }) => {
     if (currentUser) {
       const fetchUserItems = async () => {
         try {
-          const itemsCollectionRef = collection(db, 'items');
-          const data = await getDocs(itemsCollectionRef);
-  
-          const filteredItems = data.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
-  
-          let boughtCount = 0;
-          let soldCount = 0;
-  
-          filteredItems.forEach((item) => {
-            if (item.buyer === currentUser.uid) {
-              boughtCount += 1;
-            }
-            if (item.seller === currentUser.uid && item.buyer) {
-              soldCount += 1;
-            }
-          });
-  
-          setItemBought(boughtCount);  // Set the number of items bought
-          setItemSold(soldCount);  // Set the number of items sold
-          
-          const userListedItems = data.docs
-          .map((doc) => ({ ...doc.data(), id: doc.id }))
-          .filter((item) => item.seller === currentUser.uid);
-
-          setUserItems(userListedItems); 
+          setLoading(true);
+          const result = await apiService.getItemsBySeller(currentUser.id);
+          if (result.success) {
+            setUserItems(result.data || []);
+            
+            // Count sold items (items with a buyer)
+            const soldCount = result.data.filter(item => item.buyer).length;
+            setItemSold(soldCount);
+            
+            // For now, set bought items to 0 since we don't have a specific endpoint
+            // You can implement this later when you have order history
+            setItemBought(0);
+          } else {
+            console.error('Error fetching user items:', result.error);
+          }
         } catch (err) {
           console.error('Error fetching user items:', err);
+        } finally {
+          setLoading(false);
         }
       };
   
@@ -69,8 +61,10 @@ const ProfileModal = ({ showProfile, handleClose }) => {
   };
 
   const calculateJoinedDuration = (createdAt) => {
+    if (!createdAt) return 'Recently';
+    
     const now = new Date();
-    const joinedDate = createdAt.toDate();
+    const joinedDate = new Date(createdAt);
 
     const yearsDiff = now.getFullYear() - joinedDate.getFullYear();
     const monthsDiff = now.getMonth() - joinedDate.getMonth();

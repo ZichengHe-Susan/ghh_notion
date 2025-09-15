@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { io } from 'socket.io-client';
 import { useAuth } from './AuthContext';
+import config from '../config/environment';
 
 const SocketContext = createContext();
 
@@ -17,14 +18,17 @@ export const SocketProvider = ({ children }) => {
   const [isConnected, setIsConnected] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState(new Set());
   const [typingUsers, setTypingUsers] = useState({});
-  const { user, token } = useAuth();
+  const { currentUser } = useAuth();
   const reconnectTimeoutRef = useRef(null);
   const reconnectAttemptsRef = useRef(0);
   const maxReconnectAttempts = 5;
 
   useEffect(() => {
-    if (user && token) {
-      const newSocket = io(process.env.REACT_APP_API_URL || 'http://localhost:5000', {
+    if (currentUser) {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      const newSocket = io(config.SOCKET_URL, {
         auth: {
           token: token
         },
@@ -128,7 +132,7 @@ export const SocketProvider = ({ children }) => {
         setTypingUsers({});
       };
     }
-  }, [user, token]);
+  }, [currentUser]);
 
   // Socket utility functions
   const joinConversation = (conversationId) => {

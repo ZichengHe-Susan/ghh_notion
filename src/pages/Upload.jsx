@@ -1,10 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { db, storage } from "../firebase";
-import { getDocs, collection, addDoc, updateDoc, arrayUnion, doc } from 'firebase/firestore';
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from '../contexts/AuthContext';
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
-import { v4 } from 'uuid';
+import apiService from '../services/api';
 import '../css/Upload.scss';
 
 const AddItem = () => {
@@ -15,7 +12,8 @@ const AddItem = () => {
   const [newItemDescription, setItemDescription] = useState("");
   const [newLocationDet, setLocationDet] = useState("");
   const [itemImage, setItemImage] = useState(null);
-  const [isSubmitted, setIsSubmitted] = useState(false); // Track if form is submitted
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -24,52 +22,67 @@ const AddItem = () => {
     }
   }, [currentUser, navigate]);
 
-  const itemsCollectionRef = collection(db, "items");
   const onSubmitItem = async (imageURL) => {
     try {
-      await addDoc(itemsCollectionRef, {
+      const itemData = {
         name: newItemName,
-        price: newItemPrice,
+        price: parseFloat(newItemPrice),
         isAvailable: isItemAvailable,
         description: newItemDescription,
         location: newLocationDet,
-        seller: currentUser.uid,
-        timestamp: new Date(),
-        imageURL: imageURL,
-      });
-      alert("Item added successfully!");
+        images: imageURL ? [imageURL] : [],
+        category: 'general', // Default category
+        condition: 'good' // Default condition
+      };
+
+      const result = await apiService.createItem(itemData);
+      if (result.success) {
+        alert("Item added successfully!");
+        // Reset form fields
+        setItemImage(null);
+        setItemName('');
+        setItemPrice('');
+        setItemDescription('');
+        setLocationDet('');
+        setIsSubmitted(false);
+        // Navigate back to homepage
+        navigate('/');
+      } else {
+        alert(`Failed to add item: ${result.error}`);
+      }
     } catch (err) {
       console.error(err);
+      alert("Failed to add item. Please try again.");
     }
   };
 
   const uploadImage = async () => {
-    setIsSubmitted(true); // Set the form as submitted when clicking "Add Item"
+    setIsSubmitted(true);
+    setUploading(true);
 
     // Validate form fields
     if (!newItemName || !newItemPrice || !newItemDescription || !newLocationDet || !itemImage) {
       alert("Please fill in all the fields.");
+      setUploading(false);
       return;
     }
 
-    const imageRef = ref(storage, `${currentUser.uid}/${itemImage.name + v4()}`);
     try {
-      await uploadBytes(imageRef, itemImage);
-      const imageURL = await getDownloadURL(imageRef);
-      await onSubmitItem(imageURL);
-
-      // Reset form fields
-      setItemImage(null);
-      setItemName('');
-      setItemPrice('');
-      setItemDescription('');
-      setLocationDet('');
-
-      // Optionally navigate back to homepage
-      navigate('/'); // Redirect to homepage after submission
+      // Upload image to S3
+      const uploadResult = await apiService.uploadFile(itemImage, 'single');
+      
+      if (uploadResult.success) {
+        // Get the S3 URL from the upload result
+        const imageURL = uploadResult.data.url;
+        await onSubmitItem(imageURL);
+      } else {
+        alert(`Failed to upload image: ${uploadResult.error}`);
+      }
     } catch (error) {
       console.error("Error uploading image:", error);
       alert("Failed to upload image. Please try again.");
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -96,7 +109,8 @@ const AddItem = () => {
           <input
             placeholder="$0"
             type="number"
-            onChange={(e) => setItemPrice(Number(e.target.value))}
+            step="0.01"
+            onChange={(e) => setItemPrice(e.target.value)}
             value={newItemPrice}
             className={isSubmitted && !newItemPrice ? 'invalid' : ''}
             required
@@ -123,13 +137,20 @@ const AddItem = () => {
           {/* File Input */}
           <input
             type="file"
+            accept="image/*"
             onChange={(e) => setItemImage(e.target.files[0])}
             className={isSubmitted && !itemImage ? 'invalid' : ''}
             required
           />
 
           {/* Submit Button */}
-          <button onClick={uploadImage}>Add Item</button>
+          <button 
+            onClick={uploadImage} 
+            disabled={uploading}
+            style={{ opacity: uploading ? 0.6 : 1 }}
+          >
+            {uploading ? 'Uploading...' : 'Add Item'}
+          </button>
         </div>
       </div>
     </div>

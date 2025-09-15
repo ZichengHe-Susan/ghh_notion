@@ -1,14 +1,10 @@
 import React, { useState } from 'react';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../firebase'; 
+import { useAuth } from '../contexts/AuthContext';
 import '../css/login.scss'; 
 import { Typography, Button, TextField, Grid, Link, Box, Container } from '@mui/material';
 import { useNavigate } from 'react-router-dom'; 
 import Home from './Home';
 import Item from '../Item';
-import { doc, setDoc } from 'firebase/firestore';
-import { db } from "../firebase";
-
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -16,37 +12,52 @@ const Login = () => {
   const [error, setError] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
   const [displayName, setDisplayName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
 
   const navigate = useNavigate(); 
+  const { login, register } = useAuth();
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setError('');
+    
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      setError('Login successful');
-      navigate('/'); 
+      const result = await login(email, password);
+      if (result.success) {
+        setError('Login successful');
+        navigate('/'); 
+      } else {
+        setError(result.error || 'Login failed');
+      }
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Login failed');
     }
   };
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    setError('');
+    
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+      const userData = {
+        email,
+        password,
+        firstName: firstName || displayName || email.split('@')[0], // Ensure we always have a firstName
+        lastName: lastName || 'User', // Ensure we always have a lastName
+        role: 'user'
+      };
 
-    await setDoc(doc(db, 'users', user.uid), {
-      email: user.email,
-      displayName: displayName, 
-      role: 'user', 
-      createdAt: new Date(), 
-      items: [],
-      balance: 50,
-    });
-      setError('Registration successful');
+      console.log('Preparing registration data:', userData);
+      const result = await register(userData);
+      if (result.success) {
+        setError('Registration successful');
+        navigate('/');
+      } else {
+        setError(result.error || 'Registration failed');
+      }
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Registration failed');
     }
   };
 
@@ -67,16 +78,41 @@ const Login = () => {
         <form onSubmit={isRegistering ? handleRegister : handleLogin}>
           <div className="form-group">
           {isRegistering && (
-            <div className="form-group">
-              <label>Display Name</label>
-              <input
-                type="text"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                placeholder='Enter Your Display Name'
-                required
-              /> 
-            </div>
+            <>
+              <div className="form-group">
+                <label>First Name</label>
+                <input
+                  type="text"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  placeholder='Enter Your First Name'
+                  autoComplete="given-name"
+                  required
+                /> 
+              </div>
+              <div className="form-group">
+                <label>Last Name</label>
+                <input
+                  type="text"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  placeholder='Enter Your Last Name'
+                  autoComplete="family-name"
+                  required
+                /> 
+              </div>
+              <div className="form-group">
+                <label>Display Name</label>
+                <input
+                  type="text"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  placeholder='Enter Your Display Name'
+                  autoComplete="username"
+                  required
+                /> 
+              </div>
+            </>
               )
             }
             <label>Email</label>
@@ -85,6 +121,7 @@ const Login = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder='Your Email'
+              autoComplete="email"
               required
             />
           </div>
@@ -94,9 +131,15 @@ const Login = () => {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder='Your Password'
+              placeholder={isRegistering ? 'Password (min 6 chars, 1 uppercase, 1 lowercase, 1 number)' : 'Your Password'}
+              autoComplete={isRegistering ? "new-password" : "current-password"}
               required
             />
+            {isRegistering && (
+              <small style={{ color: '#666', fontSize: '12px' }}>
+                Password must be at least 6 characters with uppercase, lowercase, and number
+              </small>
+            )}
           </div>
 
 

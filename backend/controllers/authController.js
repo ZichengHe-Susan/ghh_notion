@@ -6,8 +6,10 @@ const { validationResult } = require('express-validator');
 const authController = {
   register: async (req, res) => {
     try {
+      console.log('Registration request body:', req.body);
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
+        console.log('Validation errors:', errors.array());
         return res.status(400).json({
           success: false,
           error: 'Validation failed',

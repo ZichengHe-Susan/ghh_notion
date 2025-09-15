@@ -1,9 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { db } from '../firebase';
-import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
-import lawn from '../assets/lawn.jpg';
-import login from '../assets/login.jpg';
-import old from '../assets/old-cabell.jpg';
+import { useAuth } from './AuthContext';
+import apiService from '../services/api';
 
 const CartContext = createContext();
 
@@ -12,34 +9,75 @@ export function useCart() {
 }
 
 export const CartProvider = ({ children }) => {
-  const initialCartItems = [
-    // { id: 1, title: 'Vintage Jacket', price: 65, quantity: 1, image: lawn },
-    // { id: 2, title: 'Leather Boots', price: 80, quantity: 1, image: login },
-    // { id: 3, title: 'Antique Watch', price: 120, quantity: 1, image: old }
-];
+  const [cartItems, setCartItems] = useState([]);
+  const { currentUser } = useAuth();
 
-const [cartItems, setCartItems] = useState([]);
+  useEffect(() => {
+    if (currentUser) {
+      fetchCartItems();
+    }
+  }, [currentUser]);
 
-useEffect(() => {
-  const itemsCollectionRef = collection(db, "items");
-  const getItems = async () => {
-      const data = await getDocs(itemsCollectionRef);
-      setCartItems(data.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
+  const fetchCartItems = async () => {
+    try {
+      const result = await apiService.getCart();
+      if (result.success) {
+        setCartItems(result.data || []);
+      } else {
+        console.error('Error fetching cart:', result.error);
+      }
+    } catch (error) {
+      console.error('Error fetching cart items:', error);
+    }
   };
-  getItems();
-}, []);
 
   const addToCart = async (item) => {
-    setCartItems(currentItems => [...currentItems, item]);
+    try {
+      const result = await apiService.addToCart(item._id || item.id);
+      if (result.success) {
+        setCartItems(currentItems => [...currentItems, item]);
+      } else {
+        console.error('Error adding to cart:', result.error);
+      }
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+    }
   };
 
-  const removeFromCart = async (id) => {
-    setCartItems(currentItems => currentItems.filter(item => item.id !== id));
-    await deleteDoc(doc(db, "items", id));
-  }
+  const removeFromCart = async (itemId) => {
+    try {
+      const result = await apiService.removeFromCart(itemId);
+      if (result.success) {
+        setCartItems(currentItems => currentItems.filter(item => item._id !== itemId && item.id !== itemId));
+      } else {
+        console.error('Error removing from cart:', result.error);
+      }
+    } catch (error) {
+      console.error('Error removing from cart:', error);
+    }
+  };
+
+  const clearCart = async () => {
+    try {
+      const result = await apiService.clearCart();
+      if (result.success) {
+        setCartItems([]);
+      } else {
+        console.error('Error clearing cart:', result.error);
+      }
+    } catch (error) {
+      console.error('Error clearing cart:', error);
+    }
+  };
 
   return (
-    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart }}>
+    <CartContext.Provider value={{ 
+      cartItems, 
+      addToCart, 
+      removeFromCart, 
+      clearCart,
+      fetchCartItems 
+    }}>
       {children}
     </CartContext.Provider>
   );

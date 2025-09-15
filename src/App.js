@@ -12,6 +12,7 @@ import ItemDetails from './pages/ItemDetail';
 import Checkout from './pages/Checkout';
 import ChatInterface from './components/ChatInterface';
 import ChatButton from './components/ChatButton';
+import EmailVerification from './pages/EmailVerification';
 
 function App() {
   const [showChat, setShowChat] = useState(false);
@@ -29,6 +30,7 @@ function App() {
               <Route path="/cart" element={<ShoppingCart />} />
               <Route path="/item/:id" element={<ItemDetails />} />
               <Route path="/checkedOut" element={<Checkout />} />
+              <Route path="/verify-email" element={<EmailVerification />} />
             </Routes>
             
             {/* Chat Interface */}

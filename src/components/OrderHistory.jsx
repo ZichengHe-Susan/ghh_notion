@@ -1,28 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { Typography } from '@mui/material';
 import { useAuth } from '../contexts/AuthContext';
-import { db } from '../firebase'; 
-import { getDocs, collection } from 'firebase/firestore';
+import apiService from '../services/api';
 import '../css/profile.scss'; 
 
 const OrderHistory = () => {
     const { currentUser } = useAuth();
     const [orders, setOrders] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         if (currentUser) {
             const fetchOrders = async () => {
                 try {
-                    const ordersCollectionRef = collection(db, 'orders');
-                    const data = await getDocs(ordersCollectionRef);
-
-                    const filteredOrders = data.docs
-                        .map((doc) => ({ ...doc.data(), id: doc.id }))
-                        .filter((order) => order.buyer === currentUser.uid);
-
-                    setOrders(filteredOrders);
+                    setLoading(true);
+                    const result = await apiService.getOrders();
+                    if (result.success) {
+                        // Filter orders for current user
+                        const userOrders = result.data.filter(order => order.buyer === currentUser.id);
+                        setOrders(userOrders);
+                    } else {
+                        console.error('Error fetching orders:', result.error);
+                    }
                 } catch (err) {
                     console.error('Error fetching user orders:', err);
+                } finally {
+                    setLoading(false);
                 }
             };
 
@@ -30,13 +33,17 @@ const OrderHistory = () => {
         }
     }, [currentUser]);
 
+    if (loading) {
+        return <Typography variant="body1">Loading orders...</Typography>;
+    }
+
     return (
         <div className="order-history">
             {orders.length > 0 ? (
                 orders.map((order) => (
-                    <div key={order.id} className="order">
+                    <div key={order._id} className="order">
                         <Typography variant="h6" gutterBottom className="order-id">
-                            Order ID: {order.id}
+                            Order ID: {order.orderNumber || order._id}
                         </Typography>
                         <Typography variant="body1" gutterBottom className="order-total">
                             Total: ${order.totalPrice}
