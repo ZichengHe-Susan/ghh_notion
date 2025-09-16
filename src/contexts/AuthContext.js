@@ -71,14 +71,9 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       const result = await apiService.login(email, password);
-      ////console.log('Full login result:', JSON.stringify(result, null, 2));
       
       if (result.success) {
-        //console.log('Result data:', JSON.stringify(result.data, null, 2));
-
         const { user, tokens } = result.data.data || result.data;
-        //console.log('Destructured user:', user);
-        //console.log('Destructured tokens:', tokens);
         
         // Set tokens
         apiService.setToken(tokens.accessToken);

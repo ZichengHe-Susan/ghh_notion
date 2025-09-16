@@ -41,7 +41,7 @@ class S3Service {
         Key: key,
         Body: fileBuffer,
         ContentType: mimeType,
-        // ACL: 'public-read', // bucket doesn't allow ACLs
+        ACL: 'public-read', // Make uploaded files publicly readable
         Metadata: {
           originalName: fileName,
           uploadedAt: new Date().toISOString()

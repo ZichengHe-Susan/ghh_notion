@@ -7,14 +7,22 @@ const ListedItems = ({ userItems }) => {
     <div className="items-container">
       {userItems.length > 0 ? (
         userItems.map((item) => (
-          <div key={item.id} className="itemBox">
+          <div key={item._id || item.id} className="itemBox">
             <div className="textContainer">
-              <h1 className="itemTitle">{item.name}</h1>
+              <h1 className="itemTitle">{item.title || item.name}</h1>
               <p className="itemPrice">Price: ${item.price}</p>
             </div>
-            {item.imageURL ? (
+            {item.images && item.images.length > 0 ? (
               <div className="imageContainer">
-                <img src={item.imageURL} alt={item.name} className="itemImage" />
+                <img 
+                  src={item.images[0].url || item.images[0]} 
+                  alt={item.images[0].alt || item.title || item.name} 
+                  className="itemImage" 
+                  onError={(e) => {
+                    console.error('Image failed to load:', item.images[0].url || item.images[0]);
+                    e.target.style.display = 'none';
+                  }}
+                />
               </div>
             ) : (
               <p>No image available</p>

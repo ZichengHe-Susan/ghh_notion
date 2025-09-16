@@ -6,14 +6,19 @@ import '../css/Upload.scss';
 
 const AddItem = () => {
   const { currentUser, userData } = useAuth();
-  const [newItemName, setItemName] = useState("");
-  const [newItemPrice, setItemPrice] = useState("");
-  const [isItemAvailable, setIsItemAvailable] = useState(true);
-  const [newItemDescription, setItemDescription] = useState("");
-  const [newLocationDet, setLocationDet] = useState("");
+  const [itemTitle, setItemTitle] = useState("");
+  const [itemPrice, setItemPrice] = useState("");
+  const [itemDescription, setItemDescription] = useState("");
+  const [itemCategory, setItemCategory] = useState("");
+  const [itemCondition, setItemCondition] = useState("good");
+  const [address, setAddress] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
+  const [zipCode, setZipCode] = useState("");
   const [itemImage, setItemImage] = useState(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [categories, setCategories] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -22,33 +27,71 @@ const AddItem = () => {
     }
   }, [currentUser, navigate]);
 
+  // Fetch categories on component mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const result = await apiService.getItemCategories();
+        console.log('Categories API response:', result);
+        
+        if (result.success && Array.isArray(result.data)) {
+          setCategories(result.data);
+        } else {
+          console.error('Categories data is not an array:', result);
+          setCategories([]);
+        }
+      } catch (error) {
+        console.error('Failed to fetch categories:', error);
+        setCategories([]);
+      }
+    };
+    
+    if (currentUser) {
+      fetchCategories();
+    }
+  }, [currentUser]);
+
   const onSubmitItem = async (imageURL) => {
     try {
       const itemData = {
-        name: newItemName,
-        price: parseFloat(newItemPrice),
-        isAvailable: isItemAvailable,
-        description: newItemDescription,
-        location: newLocationDet,
-        images: imageURL ? [imageURL] : [],
-        category: 'general', // Default category
-        condition: 'good' // Default condition
+        title: itemTitle,
+        description: itemDescription,
+        price: parseFloat(itemPrice),
+        category: itemCategory,
+        condition: itemCondition,
+        status: 'active', // Set status to active so item shows up
+        availability: {
+          status: 'available', // Set availability to available
+          quantity: 1
+        },
+        location: {
+          address: address,
+          city: city,
+          state: state,
+          zipCode: zipCode
+        },
+        images: imageURL ? [{ url: imageURL, alt: itemTitle, isPrimary: true }] : [],
+        shipping: {
+          isShippable: true,
+          shippingCost: 0,
+          estimatedDeliveryDays: 3
+        }
       };
 
+      console.log('Creating item with data:', itemData);
       const result = await apiService.createItem(itemData);
+      console.log('Item creation result:', result);
       if (result.success) {
         alert("Item added successfully!");
         // Reset form fields
-        setItemImage(null);
-        setItemName('');
-        setItemPrice('');
-        setItemDescription('');
-        setLocationDet('');
-        setIsSubmitted(false);
+        resetForm();
         // Navigate back to homepage
         navigate('/');
       } else {
         alert(`Failed to add item: ${result.error}`);
+        if (result.details) {
+          console.error('Validation errors:', result.details);
+        }
       }
     } catch (err) {
       console.error(err);
@@ -56,13 +99,43 @@ const AddItem = () => {
     }
   };
 
+  const resetForm = () => {
+    setItemImage(null);
+    setItemTitle('');
+    setItemPrice('');
+    setItemDescription('');
+    setItemCategory('');
+    setItemCondition('good');
+    setAddress('');
+    setCity('');
+    setState('');
+    setZipCode('');
+    setIsSubmitted(false);
+  };
+
   const uploadImage = async () => {
     setIsSubmitted(true);
     setUploading(true);
 
     // Validate form fields
-    if (!newItemName || !newItemPrice || !newItemDescription || !newLocationDet || !itemImage) {
-      alert("Please fill in all the fields.");
+    if (!itemTitle || !itemPrice || !itemDescription || !itemCategory || !address || !city || !state || !zipCode || !itemImage) {
+      alert("Please fill in all the required fields.");
+      setUploading(false);
+      return;
+    }
+
+    // Validate price
+    const price = parseFloat(itemPrice);
+    if (isNaN(price) || price < 0) {
+      alert("Please enter a valid price.");
+      setUploading(false);
+      return;
+    }
+
+    // Validate ZIP code format
+    const zipRegex = /^\d{5}(-\d{4})?$/;
+    if (!zipRegex.test(zipCode)) {
+      alert("Please enter a valid ZIP code (format: 12345 or 12345-6789).");
       setUploading(false);
       return;
     }
@@ -73,7 +146,9 @@ const AddItem = () => {
       
       if (uploadResult.success) {
         // Get the S3 URL from the upload result
+        console.log('Upload result:', uploadResult);
         const imageURL = uploadResult.data.url;
+        console.log('Extracted image URL:', imageURL);
         await onSubmitItem(imageURL);
       } else {
         alert(`Failed to upload image: ${uploadResult.error}`);
@@ -96,41 +171,97 @@ const AddItem = () => {
       <h2 style={{ color: 'white' }}>Item Details</h2>
 
         <div className="form-container">
-          {/* Name Input */}
+          {/* Title Input */}
           <input
-            placeholder="Item Name..."
-            onChange={(e) => setItemName(e.target.value)}
-            value={newItemName}
-            className={isSubmitted && !newItemName ? 'invalid' : ''}
+            placeholder="Item Title..."
+            onChange={(e) => setItemTitle(e.target.value)}
+            value={itemTitle}
+            className={isSubmitted && !itemTitle ? 'invalid' : ''}
             required
           />
 
           {/* Price Input */}
           <input
-            placeholder="$0"
+            placeholder="$0.00"
             type="number"
             step="0.01"
+            min="0"
             onChange={(e) => setItemPrice(e.target.value)}
-            value={newItemPrice}
-            className={isSubmitted && !newItemPrice ? 'invalid' : ''}
+            value={itemPrice}
+            className={isSubmitted && !itemPrice ? 'invalid' : ''}
             required
           />
 
           {/* Description Input */}
           <textarea
-            className={`description-textarea ${isSubmitted && !newItemDescription ? 'invalid' : ''}`}
-            placeholder="Description of Item..."
+            className={`description-textarea ${isSubmitted && !itemDescription ? 'invalid' : ''}`}
+            placeholder="Description of Item (minimum 10 characters)..."
             onChange={(e) => setItemDescription(e.target.value)}
-            value={newItemDescription}
+            value={itemDescription}
             required
           />
 
-          {/* Location Input */}
+          {/* Category Selection */}
+          <select
+            onChange={(e) => setItemCategory(e.target.value)}
+            value={itemCategory}
+            className={isSubmitted && !itemCategory ? 'invalid' : ''}
+            required
+          >
+            <option value="">Select Category</option>
+            {Array.isArray(categories) && categories.map(category => (
+              <option key={category._id} value={category._id}>
+                {category.name}
+              </option>
+            ))}
+          </select>
+
+          {/* Condition Selection */}
+          <select
+            onChange={(e) => setItemCondition(e.target.value)}
+            value={itemCondition}
+            required
+          >
+            <option value="new">New</option>
+            <option value="like_new">Like New</option>
+            <option value="good">Good</option>
+            <option value="fair">Fair</option>
+            <option value="poor">Poor</option>
+          </select>
+
+          {/* Address Input */}
           <input
-            placeholder="Pickup or Dropoff Details..."
-            onChange={(e) => setLocationDet(e.target.value)}
-            value={newLocationDet}
-            className={isSubmitted && !newLocationDet ? 'invalid' : ''}
+            placeholder="Street Address..."
+            onChange={(e) => setAddress(e.target.value)}
+            value={address}
+            className={isSubmitted && !address ? 'invalid' : ''}
+            required
+          />
+
+          {/* City Input */}
+          <input
+            placeholder="City..."
+            onChange={(e) => setCity(e.target.value)}
+            value={city}
+            className={isSubmitted && !city ? 'invalid' : ''}
+            required
+          />
+
+          {/* State Input */}
+          <input
+            placeholder="State..."
+            onChange={(e) => setState(e.target.value)}
+            value={state}
+            className={isSubmitted && !state ? 'invalid' : ''}
+            required
+          />
+
+          {/* ZIP Code Input */}
+          <input
+            placeholder="ZIP Code (12345 or 12345-6789)..."
+            onChange={(e) => setZipCode(e.target.value)}
+            value={zipCode}
+            className={isSubmitted && !zipCode ? 'invalid' : ''}
             required
           />
 

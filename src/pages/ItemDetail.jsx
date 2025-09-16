@@ -20,6 +20,8 @@ const ItemDetails = () => {
         setLoading(true);
         const result = await apiService.getItem(id);
         if (result.success) {
+          console.log("Item data received:", result.data);
+          console.log("Images:", result.data.images);
           setItemData(result.data);
         } else {
           console.log("Item not found:", result.error);
@@ -49,12 +51,25 @@ const ItemDetails = () => {
     <div className="item-details-container">
       <button className='back-button-checkout' onClick={handleGoBack}>Go back to homepage</button>
 
-      <h1>{itemData.name}</h1>
+      <h1>{itemData.title || itemData.name}</h1>
       <p><strong>Price:</strong> ${itemData.price}</p>
       <p><strong>Description:</strong> {itemData.description}</p>
-      <p><strong>Location Details:</strong> {itemData.location}</p>
+      <p><strong>Location Details:</strong> {itemData.location ? `${itemData.location.address}, ${itemData.location.city}, ${itemData.location.state} ${itemData.location.zipCode}` : 'Location not specified'}</p>
       {itemData.images && itemData.images.length > 0 ? (
-        <img src={itemData.images[0]} alt={itemData.name} className="item-image" />
+        <div className="item-images">
+          {itemData.images.map((image, index) => (
+            <img 
+              key={index}
+              src={image.url || image} 
+              alt={image.alt || itemData.title || itemData.name} 
+              className="item-image" 
+              onError={(e) => {
+                console.error('Image failed to load:', image.url || image);
+                e.target.style.display = 'none';
+              }}
+            />
+          ))}
+        </div>
       ) : (
         <p>No image available</p>
       )}

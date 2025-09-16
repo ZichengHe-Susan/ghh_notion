@@ -30,7 +30,13 @@ class FileUploadController {
       res.status(200).json({
         success: true,
         message: 'File uploaded successfully',
-        data: result
+        data: {
+          url: result.url,
+          key: result.key,
+          bucket: result.bucket,
+          originalName: result.originalName,
+          size: result.size
+        }
       });
 
     } catch (error) {
@@ -70,7 +76,10 @@ class FileUploadController {
       res.status(200).json({
         success: true,
         message: `${result.count} files uploaded successfully`,
-        data: result
+        data: {
+          files: result.files,
+          count: result.count
+        }
       });
 
     } catch (error) {
@@ -116,8 +125,11 @@ class FileUploadController {
         success: true,
         message: 'Avatar uploaded successfully',
         data: {
-          avatarUrl: result.url,
-          key: result.key
+          url: result.url,
+          key: result.key,
+          bucket: result.bucket,
+          originalName: result.originalName,
+          size: result.size
         }
       });
 

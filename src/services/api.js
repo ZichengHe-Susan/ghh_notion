@@ -77,6 +77,11 @@ class ApiService {
         throw new Error(data.message || data.error || `HTTP ${response.status}: ${response.statusText}`);
       }
 
+      // If the backend response already has success/data structure, return it directly
+      if (data && typeof data === 'object' && 'success' in data && 'data' in data) {
+        return data;
+      }
+      
       return { success: true, data };
     } catch (error) {
       console.error('API Request Error:', error);
@@ -202,6 +207,11 @@ class ApiService {
         throw new Error(data.message || `HTTP ${response.status}: ${response.statusText}`);
       }
 
+      // If the backend response already has success/data structure, return it directly
+      if (data && typeof data === 'object' && 'success' in data && 'data' in data) {
+        return data;
+      }
+      
       return { success: true, data };
     } catch (error) {
       console.error('File Upload Error:', error);
@@ -230,6 +240,11 @@ class ApiService {
         throw new Error(data.message || `HTTP ${response.status}: ${response.statusText}`);
       }
 
+      // If the backend response already has success/data structure, return it directly
+      if (data && typeof data === 'object' && 'success' in data && 'data' in data) {
+        return data;
+      }
+      
       return { success: true, data };
     } catch (error) {
       console.error('Multiple File Upload Error:', error);
@@ -256,6 +271,11 @@ class ApiService {
         throw new Error(data.message || `HTTP ${response.status}: ${response.statusText}`);
       }
 
+      // If the backend response already has success/data structure, return it directly
+      if (data && typeof data === 'object' && 'success' in data && 'data' in data) {
+        return data;
+      }
+      
       return { success: true, data };
     } catch (error) {
       console.error('Avatar Upload Error:', error);
