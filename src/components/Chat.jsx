@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSocket } from '../contexts/SocketContext';
 import { useAuth } from '../contexts/AuthContext';
-import './Chat.css';
+import './styles/Chat.css';
 
 const Chat = ({ conversation, onClose }) => {
   const [messages, setMessages] = useState([]);

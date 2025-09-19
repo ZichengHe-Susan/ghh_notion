@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import './ReviewDisplay.css';
+import './styles/ReviewDisplay.css';
 
 const ReviewDisplay = ({ 
   reviews, 

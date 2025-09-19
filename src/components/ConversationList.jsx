@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSocket } from '../contexts/SocketContext';
 import { useAuth } from '../contexts/AuthContext';
-import './ConversationList.css';
+import './styles/ConversationList.css';
 
 const ConversationList = ({ onSelectConversation, selectedConversationId }) => {
   const [conversations, setConversations] = useState([]);

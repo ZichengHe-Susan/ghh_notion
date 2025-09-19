@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useSocket } from '../contexts/SocketContext';
-import './ChatButton.css';
+import './styles/ChatButton.css';
 
 const ChatButton = ({ onClick }) => {
   const [unreadCount, setUnreadCount] = useState(0);

@@ -3,7 +3,7 @@ import ConversationList from './ConversationList';
 import Chat from './Chat';
 import { useSocket } from '../contexts/SocketContext';
 import { useAuth } from '../contexts/AuthContext';
-import './ChatInterface.css';
+import './styles/ChatInterface.css';
 
 const ChatInterface = ({ onClose }) => {
   const [selectedConversation, setSelectedConversation] = useState(null);
