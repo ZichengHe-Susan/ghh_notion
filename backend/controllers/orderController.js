@@ -46,6 +46,7 @@ const orderController = {
         .populate('buyer', 'firstName lastName email')
         .populate('seller', 'firstName lastName email')
         .populate('items.item', 'title images condition')
+        .populate('shipping.address', 'address contactInfo label')
         .sort(sortOptions)
         .skip(skip)
         .limit(parseInt(limit));
@@ -87,6 +88,7 @@ const orderController = {
         .populate('buyer', 'firstName lastName email phone')
         .populate('seller', 'firstName lastName email phone')
         .populate('items.item', 'title description images condition specifications')
+        .populate('shipping.address', 'address contactInfo label')
         .populate('communication.conversationId', 'participants lastMessageAt');
 
       if (!order) {
@@ -130,7 +132,7 @@ const orderController = {
     try {
       const {
         items,
-        shippingAddress,
+        shippingAddressId,
         shippingMethod = 'standard',
         paymentMethod = 'stripe',
         notes
@@ -145,10 +147,25 @@ const orderController = {
         });
       }
 
+      if (!shippingAddressId) {
+        return res.status(400).json({
+          success: false,
+          message: 'Shipping address ID is required'
+        });
+      }
+
+      // Validate shipping address belongs to buyer
+      const Address = require('../models/Address');
+      const shippingAddress = await Address.findOne({
+        _id: shippingAddressId,
+        user: buyerId,
+        isActive: true
+      });
+
       if (!shippingAddress) {
         return res.status(400).json({
           success: false,
-          message: 'Shipping address is required'
+          message: 'Invalid shipping address'
         });
       }
 
@@ -221,7 +238,7 @@ const orderController = {
         },
         shipping: {
           method: shippingMethod,
-          address: shippingAddress
+          address: shippingAddressId
         },
         payment: {
           method: paymentMethod,

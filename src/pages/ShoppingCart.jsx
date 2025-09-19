@@ -5,6 +5,7 @@ import defaultImage from '../assets/coming-soon.jpg';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 import apiService from '../services/api';
+import AddressModal from '../components/AddressModal';
 
 const ShoppingCart = () => {
     const navigate = useNavigate();
@@ -12,6 +13,13 @@ const ShoppingCart = () => {
     const { cartItems, removeFromCart, clearCart, updateItemQuantity } = useCart();
     const [totalPrice, setTotalPrice] = useState(0);
     const [loading, setLoading] = useState(true);
+    
+    // Shipping address state - now only for selected address
+    const [shippingAddress, setShippingAddress] = useState(null);
+    
+    // Address modal state
+    const [showAddressModal, setShowAddressModal] = useState(false);
+    const [selectedAddress, setSelectedAddress] = useState(null);
 
     useEffect(() => {
         if (!currentUser) {
@@ -30,7 +38,12 @@ const ShoppingCart = () => {
             setTotalPrice(totalP);
             setLoading(false);
         }
-    }, [currentUser, cartItems]); 
+    }, [currentUser, cartItems]);
+
+    const handleAddressSelect = (address) => {
+        setSelectedAddress(address);
+        setShippingAddress(address.address);
+    }; 
 
     const removeItem = async (itemId) => {
         try {
@@ -55,10 +68,24 @@ const ShoppingCart = () => {
                 return;
             }
             
+            // Validate shipping address - must select from address book
+            if (!selectedAddress) {
+                alert('Please select an address from your address book.');
+                return;
+            }
+            
+            // Transform cart items to match backend expectations
+            const transformedItems = cartItems.map(item => ({
+                itemId: item._id || item.id,
+                quantity: item.quantity
+            }));
+
             const orderData = {
-                items: cartItems,
-                totalPrice: totalPrice,
-                status: 'pending'
+                items: transformedItems,
+                shippingAddress: selectedAddress.address,
+                shippingMethod: 'standard',
+                paymentMethod: 'stripe',
+                notes: ''
             };
 
             const result = await apiService.createOrder(orderData);
@@ -131,6 +158,33 @@ const ShoppingCart = () => {
                     <p>Your cart is empty.</p>
                 </div>
             )}
+            <div className="shipping-form">
+                <h2>Shipping Address</h2>
+                
+                {/* Address Selection */}
+                <div className="address-selection">
+                    <button 
+                        type="button" 
+                        className="select-address-btn"
+                        onClick={() => setShowAddressModal(true)}
+                    >
+                        {selectedAddress ? `Selected: ${selectedAddress.label}` : 'Select from Address Book'}
+                    </button>
+                    {selectedAddress && (
+                        <button 
+                            type="button" 
+                            className="clear-address-btn"
+                            onClick={() => {
+                                setSelectedAddress(null);
+                                setShippingAddress(null);
+                            }}
+                        >
+                            Clear Selection
+                        </button>
+                    )}
+                </div>
+
+            </div>
             <div className="cart-sum">
             <h2>Summary</h2>
                 <div className="summary-details">
@@ -143,6 +197,16 @@ const ShoppingCart = () => {
         <div className="cart-summary">
             
         </div>
+
+        {/* Address Modal */}
+        <AddressModal
+            isOpen={showAddressModal}
+            onClose={() => setShowAddressModal(false)}
+            onSelectAddress={handleAddressSelect}
+            selectedAddressId={selectedAddress?._id}
+            title="Select Shipping Address"
+            allowSave={true}
+        />
         </div>
     );
 }

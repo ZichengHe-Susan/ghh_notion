@@ -187,32 +187,8 @@ const validateItem = [
     .withMessage('Condition must be one of: new, like_new, good, fair, poor'),
   
   body('location.address')
-    .trim()
-    .notEmpty()
-    .withMessage('Address is required')
-    .isLength({ max: 200 })
-    .withMessage('Address cannot exceed 200 characters'),
-  
-  body('location.city')
-    .trim()
-    .notEmpty()
-    .withMessage('City is required')
-    .isLength({ max: 50 })
-    .withMessage('City cannot exceed 50 characters'),
-  
-  body('location.state')
-    .trim()
-    .notEmpty()
-    .withMessage('State is required')
-    .isLength({ max: 50 })
-    .withMessage('State cannot exceed 50 characters'),
-  
-  body('location.zipCode')
-    .trim()
-    .notEmpty()
-    .withMessage('ZIP code is required')
-    .matches(/^\d{5}(-\d{4})?$/)
-    .withMessage('ZIP code must be in format 12345 or 12345-6789'),
+    .isMongoId()
+    .withMessage('Valid address ID is required'),
   
   body('shipping.isShippable')
     .optional()
@@ -478,54 +454,9 @@ const validateOrder = [
     .isInt({ min: 1 })
     .withMessage('Quantity must be a positive integer'),
   
-  body('shippingAddress')
-    .isObject()
-    .withMessage('Shipping address is required'),
-  
-  body('shippingAddress.street')
-    .trim()
-    .notEmpty()
-    .withMessage('Street address is required')
-    .isLength({ max: 200 })
-    .withMessage('Street address cannot exceed 200 characters'),
-  
-  body('shippingAddress.city')
-    .trim()
-    .notEmpty()
-    .withMessage('City is required')
-    .isLength({ max: 50 })
-    .withMessage('City cannot exceed 50 characters'),
-  
-  body('shippingAddress.state')
-    .trim()
-    .notEmpty()
-    .withMessage('State is required')
-    .isLength({ max: 50 })
-    .withMessage('State cannot exceed 50 characters'),
-  
-  body('shippingAddress.zipCode')
-    .trim()
-    .notEmpty()
-    .withMessage('ZIP code is required')
-    .matches(/^\d{5}(-\d{4})?$/)
-    .withMessage('ZIP code must be in format 12345 or 12345-6789'),
-  
-  body('shippingAddress.country')
-    .optional()
-    .trim()
-    .isLength({ max: 50 })
-    .withMessage('Country cannot exceed 50 characters'),
-  
-  body('shippingAddress.phone')
-    .optional()
-    .isMobilePhone()
-    .withMessage('Please provide a valid phone number'),
-  
-  body('shippingAddress.instructions')
-    .optional()
-    .trim()
-    .isLength({ max: 500 })
-    .withMessage('Shipping instructions cannot exceed 500 characters'),
+  body('shippingAddressId')
+    .isMongoId()
+    .withMessage('Valid shipping address ID is required'),
   
   body('shippingMethod')
     .optional()

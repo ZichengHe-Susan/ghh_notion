@@ -186,6 +186,22 @@ const userSchema = new mongoose.Schema({
   },
   lastLogin: {
     type: Date
+  },
+  // Address book references
+  addresses: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Address'
+  }],
+  // Default addresses for quick access
+  defaultAddresses: {
+    shipping: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Address'
+    },
+    billing: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Address'
+    }
   }
 }, {
   timestamps: true,
@@ -243,6 +259,53 @@ userSchema.methods.generatePasswordResetToken = function() {
 // Static method to find user by email
 userSchema.statics.findByEmail = function(email) {
   return this.findOne({ email: email.toLowerCase() });
+};
+
+// Instance methods for address management
+userSchema.methods.addAddress = async function(addressId) {
+  if (!this.addresses.includes(addressId)) {
+    this.addresses.push(addressId);
+    return this.save();
+  }
+  return this;
+};
+
+userSchema.methods.removeAddress = async function(addressId) {
+  this.addresses = this.addresses.filter(addr => addr.toString() !== addressId.toString());
+  
+  // Remove from default addresses if it was set as default
+  if (this.defaultAddresses.shipping && this.defaultAddresses.shipping.toString() === addressId.toString()) {
+    this.defaultAddresses.shipping = undefined;
+  }
+  if (this.defaultAddresses.billing && this.defaultAddresses.billing.toString() === addressId.toString()) {
+    this.defaultAddresses.billing = undefined;
+  }
+  
+  return this.save();
+};
+
+userSchema.methods.setDefaultAddress = async function(addressId, type = 'shipping') {
+  if (type === 'shipping') {
+    this.defaultAddresses.shipping = addressId;
+  } else if (type === 'billing') {
+    this.defaultAddresses.billing = addressId;
+  }
+  return this.save();
+};
+
+userSchema.methods.getAddresses = async function() {
+  const Address = mongoose.model('Address');
+  return Address.find({ user: this._id, isActive: true }).sort({ isDefault: -1, 'metadata.lastUsed': -1 });
+};
+
+userSchema.methods.getDefaultAddress = async function(type = 'shipping') {
+  const Address = mongoose.model('Address');
+  return Address.findOne({ 
+    user: this._id, 
+    type: type, 
+    isDefault: true, 
+    isActive: true 
+  });
 };
 
 module.exports = mongoose.model('User', userSchema);

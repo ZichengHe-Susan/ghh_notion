@@ -26,6 +26,7 @@ const adminRoutes = require('./routes/admin');
 const uploadRoutes = require('./routes/upload');
 const notificationRoutes = require('./routes/notifications');
 const cartRoutes = require('./routes/cart');
+const addressRoutes = require('./routes/addresses');
 
 // Import services
 const orderLifecycleService = require('./services/orderLifecycleService');
@@ -110,6 +111,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/cart', cartRoutes);
+app.use('/api/addresses', addressRoutes);
 
 // Serve static files (for uploaded images)
 app.use('/uploads', express.static('uploads'));

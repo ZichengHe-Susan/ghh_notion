@@ -220,3 +220,172 @@ body, h1, p {
     padding: 20px 40px 40px 40px;
 
   }
+
+  /* Address Management Styles */
+  .shipping-form {
+    margin: 20px 0;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+  }
+
+  .saved-addresses {
+    margin-bottom: 20px;
+  }
+
+  .address-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .address-option {
+    display: flex;
+    align-items: flex-start;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .address-option:hover {
+    border-color: #007bff;
+    background-color: #f8f9fa;
+  }
+
+  .address-option input[type="radio"] {
+    margin-right: 15px;
+    margin-top: 5px;
+  }
+
+  .address-option label {
+    flex: 1;
+    cursor: pointer;
+  }
+
+  .address-label {
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 5px;
+  }
+
+  .address-details {
+    color: #666;
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  .manual-address {
+    margin: 20px 0;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: white;
+  }
+
+  .save-address-section {
+    margin-top: 20px;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: white;
+  }
+
+  .save-address-btn {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-bottom: 15px;
+  }
+
+  .save-address-btn:hover {
+    background-color: #218838;
+  }
+
+  .save-address-form {
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+  }
+
+  .save-address-form h4 {
+    margin-top: 0;
+    color: #333;
+  }
+
+  .save-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 10px;
+  }
+
+  .save-btn:hover:not(:disabled) {
+    background-color: #0056b3;
+  }
+
+  .save-btn:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+  }
+
+  /* Address Selection Styles */
+  .address-selection {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .select-address-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .select-address-btn:hover {
+    background-color: #0056b3;
+  }
+
+  .clear-address-btn {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+  }
+
+  .clear-address-btn:hover {
+    background-color: #5a6268;
+  }
+
+  /* Disabled input styles */
+  input:disabled {
+    background-color: #f8f9fa;
+    color: #6c757d;
+    cursor: not-allowed;
+  }

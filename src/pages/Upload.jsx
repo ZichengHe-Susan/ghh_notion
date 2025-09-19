@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from '../contexts/AuthContext';
 import apiService from '../services/api';
+import AddressModal from '../components/AddressModal';
 import '../css/Upload.scss';
 
 const AddItem = () => {
@@ -11,14 +12,12 @@ const AddItem = () => {
   const [itemDescription, setItemDescription] = useState("");
   const [itemCategory, setItemCategory] = useState("");
   const [itemCondition, setItemCondition] = useState("good");
-  const [address, setAddress] = useState("");
-  const [city, setCity] = useState("");
-  const [state, setState] = useState("");
-  const [zipCode, setZipCode] = useState("");
   const [itemImage, setItemImage] = useState(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [categories, setCategories] = useState([]);
+  const [showAddressModal, setShowAddressModal] = useState(false);
+  const [selectedAddress, setSelectedAddress] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -51,8 +50,13 @@ const AddItem = () => {
     }
   }, [currentUser]);
 
+  const handleAddressSelect = (address) => {
+    setSelectedAddress(address);
+  };
+
   const onSubmitItem = async (imageURL) => {
     try {
+      // Use selected address
       const itemData = {
         title: itemTitle,
         description: itemDescription,
@@ -65,10 +69,7 @@ const AddItem = () => {
           quantity: 1
         },
         location: {
-          address: address,
-          city: city,
-          state: state,
-          zipCode: zipCode
+          address: selectedAddress._id
         },
         images: imageURL ? [{ url: imageURL, alt: itemTitle, isPrimary: true }] : [],
         shipping: {
@@ -106,11 +107,8 @@ const AddItem = () => {
     setItemDescription('');
     setItemCategory('');
     setItemCondition('good');
-    setAddress('');
-    setCity('');
-    setState('');
-    setZipCode('');
     setIsSubmitted(false);
+    setSelectedAddress(null);
   };
 
   const uploadImage = async () => {
@@ -118,8 +116,15 @@ const AddItem = () => {
     setUploading(true);
 
     // Validate form fields
-    if (!itemTitle || !itemPrice || !itemDescription || !itemCategory || !address || !city || !state || !zipCode || !itemImage) {
+    if (!itemTitle || !itemPrice || !itemDescription || !itemCategory || !itemImage) {
       alert("Please fill in all the required fields.");
+      setUploading(false);
+      return;
+    }
+
+    // Validate address selection
+    if (!selectedAddress) {
+      alert("Please select an address from your address book.");
       setUploading(false);
       return;
     }
@@ -132,13 +137,6 @@ const AddItem = () => {
       return;
     }
 
-    // Validate ZIP code format
-    const zipRegex = /^\d{5}(-\d{4})?$/;
-    if (!zipRegex.test(zipCode)) {
-      alert("Please enter a valid ZIP code (format: 12345 or 12345-6789).");
-      setUploading(false);
-      return;
-    }
 
     try {
       // Upload image to S3
@@ -229,41 +227,27 @@ const AddItem = () => {
             <option value="poor">Poor</option>
           </select>
 
-          {/* Address Input */}
-          <input
-            placeholder="Street Address..."
-            onChange={(e) => setAddress(e.target.value)}
-            value={address}
-            className={isSubmitted && !address ? 'invalid' : ''}
-            required
-          />
-
-          {/* City Input */}
-          <input
-            placeholder="City..."
-            onChange={(e) => setCity(e.target.value)}
-            value={city}
-            className={isSubmitted && !city ? 'invalid' : ''}
-            required
-          />
-
-          {/* State Input */}
-          <input
-            placeholder="State..."
-            onChange={(e) => setState(e.target.value)}
-            value={state}
-            className={isSubmitted && !state ? 'invalid' : ''}
-            required
-          />
-
-          {/* ZIP Code Input */}
-          <input
-            placeholder="ZIP Code (12345 or 12345-6789)..."
-            onChange={(e) => setZipCode(e.target.value)}
-            value={zipCode}
-            className={isSubmitted && !zipCode ? 'invalid' : ''}
-            required
-          />
+          {/* Address Selection */}
+          <div className="address-selection">
+            <button 
+              type="button" 
+              className="select-address-btn"
+              onClick={() => setShowAddressModal(true)}
+            >
+              {selectedAddress ? `Selected: ${selectedAddress.label || selectedAddress.contactInfo?.firstName + ' ' + selectedAddress.contactInfo?.lastName}` : 'Select from Address Book'}
+            </button>
+            {selectedAddress && (
+              <button 
+                type="button" 
+                className="clear-address-btn"
+                onClick={() => {
+                  setSelectedAddress(null);
+                }}
+              >
+                Clear Selection
+              </button>
+            )}
+          </div>
 
           {/* File Input */}
           <input
@@ -284,6 +268,16 @@ const AddItem = () => {
           </button>
         </div>
       </div>
+
+      {/* Address Modal */}
+      <AddressModal
+        isOpen={showAddressModal}
+        onClose={() => setShowAddressModal(false)}
+        onSelectAddress={handleAddressSelect}
+        selectedAddressId={selectedAddress?._id}
+        title="Select Item Location Address"
+        allowSave={true}
+      />
     </div>
   );
 };

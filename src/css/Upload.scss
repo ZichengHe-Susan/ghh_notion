@@ -147,4 +147,53 @@
         width: 100%; // Full width for mobile
       }
     }
-}
+
+    // Address Selection Styles
+    .address-selection {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+
+    .select-address-btn {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: background-color 0.2s ease;
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .select-address-btn:hover {
+      background-color: #0056b3;
+    }
+
+    .clear-address-btn {
+      background-color: #6c757d;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: background-color 0.2s ease;
+    }
+
+    .clear-address-btn:hover {
+      background-color: #5a6268;
+    }
+
+    // Disabled input styles
+    input:disabled {
+      background-color: #f8f9fa;
+      color: #6c757d;
+      cursor: not-allowed;
+    }
+  }

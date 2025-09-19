@@ -432,6 +432,51 @@ class ApiService {
       method: 'DELETE',
     });
   }
+
+  // Address methods
+  async getAddresses() {
+    return this.request('/addresses');
+  }
+
+  async getDefaultAddress(type = 'shipping') {
+    return this.request(`/addresses/default?type=${type}`);
+  }
+
+  async getAddressById(id) {
+    return this.request(`/addresses/${id}`);
+  }
+
+  async createAddress(addressData) {
+    return this.request('/addresses', {
+      method: 'POST',
+      body: JSON.stringify(addressData),
+    });
+  }
+
+  async updateAddress(id, addressData) {
+    return this.request(`/addresses/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(addressData),
+    });
+  }
+
+  async deleteAddress(id) {
+    return this.request(`/addresses/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async setDefaultAddress(id) {
+    return this.request(`/addresses/${id}/set-default`, {
+      method: 'PUT',
+    });
+  }
+
+  async markAddressAsUsed(id) {
+    return this.request(`/addresses/${id}/mark-used`, {
+      method: 'PUT',
+    });
+  }
 }
 
 // Create and export a singleton instance

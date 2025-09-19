@@ -9,6 +9,7 @@ const Review = require('./Review');
 const AdminLog = require('./AdminLog');
 const Notification = require('./Notification');
 const Cart = require('./Cart');
+const Address = require('./Address');
 
 module.exports = {
   User,
@@ -21,5 +22,6 @@ module.exports = {
   Review,
   AdminLog,
   Notification,
-  Cart
+  Cart,
+  Address
 };

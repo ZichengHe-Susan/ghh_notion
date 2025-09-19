@@ -48,7 +48,9 @@ const itemController = {
       }
 
       if (location) {
-        filter['location.city'] = new RegExp(location, 'i');
+        // Note: Location filtering would require population of address data
+        // For now, we'll skip location filtering or implement it differently
+        // filter['location.address.address.city'] = new RegExp(location, 'i');
       }
 
       if (condition) {
@@ -63,6 +65,7 @@ const itemController = {
       const items = await Item.find(filter)
         .populate('category', 'name slug')
         .populate('seller', 'firstName lastName email')
+        .populate('location.address', 'address contactInfo label')
         .sort(sortOptions)
         .skip(skip)
         .limit(parseInt(limit))
@@ -106,6 +109,7 @@ const itemController = {
       const item = await Item.findById(id)
         .populate('category', 'name slug description')
         .populate('seller', 'firstName lastName email phone')
+        .populate('location.address', 'address contactInfo label')
         .lean();
 
       if (!item) {
@@ -165,7 +169,8 @@ const itemController = {
 
       const populatedItem = await Item.findById(item._id)
         .populate('category', 'name slug')
-        .populate('seller', 'firstName lastName email');
+        .populate('seller', 'firstName lastName email')
+        .populate('location.address', 'address contactInfo label');
 
       res.status(201).json({
         success: true,
