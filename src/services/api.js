@@ -52,8 +52,24 @@ class ApiService {
       ...options,
     };
 
+    // Log request details for debugging
+    console.log('API Request:', {
+      url,
+      method: config.method || 'GET',
+      endpoint,
+      timestamp: new Date().toISOString()
+    });
+
     try {
       const response = await fetch(url, config);
+      
+      console.log('API Response received:', {
+        url,
+        status: response.status,
+        statusText: response.statusText,
+        contentType: response.headers.get('content-type'),
+        timestamp: new Date().toISOString()
+      });
       
       // Handle non-JSON responses
       if (!response.headers.get('content-type')?.includes('application/json')) {
@@ -77,6 +93,12 @@ class ApiService {
         throw new Error(data.message || data.error || `HTTP ${response.status}: ${response.statusText}`);
       }
 
+      console.log('API Success Response:', {
+        url,
+        data,
+        timestamp: new Date().toISOString()
+      });
+
       // If the backend response already has success structure, return it directly
       if (data && typeof data === 'object' && 'success' in data) {
         return data;
@@ -84,7 +106,12 @@ class ApiService {
       
       return { success: true, data };
     } catch (error) {
-      console.error('API Request Error:', error);
+      console.error('API Request Error:', {
+        url,
+        error: error.message,
+        stack: error.stack,
+        timestamp: new Date().toISOString()
+      });
       return { success: false, error: error.message };
     }
   }

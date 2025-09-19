@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import apiService from '../services/api';
 
@@ -7,38 +7,73 @@ const EmailVerification = () => {
   const navigate = useNavigate();
   const [status, setStatus] = useState('verifying'); // 'verifying', 'success', 'error', 'alreadyVerified'
   const [message, setMessage] = useState('');
+  const hasVerified = useRef(false); // Prevent duplicate verification attempts
 
   useEffect(() => {
     const token = searchParams.get('token');
     
+    console.log('EmailVerification useEffect triggered', {
+      token: token ? `${token.substring(0, 10)}...` : 'null',
+      hasVerified: hasVerified.current,
+      status
+    });
+    
     if (!token) {
+      console.log('No token provided, setting error status');
       setStatus('error');
       setMessage('No verification token provided');
       return;
     }
 
+    if (hasVerified.current) {
+      console.log('Verification already attempted, skipping');
+      return;
+    }
+
+    hasVerified.current = true;
     verifyEmail(token);
   }, [searchParams]);
 
   const verifyEmail = async (token) => {
+    console.log('Starting email verification', {
+      token: `${token.substring(0, 10)}...`,
+      timestamp: new Date().toISOString()
+    });
+
     try {
+      console.log('Making API request to verify email');
       const result = await apiService.request(`/auth/verify-email/${token}`, {
         method: 'GET'
       });
 
+      console.log('Email verification API response:', {
+        success: result.success,
+        alreadyVerified: result.alreadyVerified,
+        error: result.error,
+        message: result.message
+      });
+
       if (result.success) {
         if (result.alreadyVerified) {
+          console.log('Email already verified, setting alreadyVerified status');
           setStatus('alreadyVerified');
           setMessage('Your email is already verified. Please log in to continue.');
         } else {
+          console.log('Email verification successful, setting success status');
           setStatus('success');
           setMessage('Email verified successfully! You can now log in.');
         }
       } else {
+        console.log('Email verification failed:', result.error);
         setStatus('error');
         setMessage(result.error || 'Email verification failed');
       }
     } catch (error) {
+      console.error('Email verification error caught:', {
+        message: error.message,
+        stack: error.stack,
+        timestamp: new Date().toISOString()
+      });
       setStatus('error');
       setMessage('Email verification failed. Please try again.');
     }

@@ -324,6 +324,13 @@ const authController = {
   verifyEmail: async (req, res) => {
     try {
       const { token } = req.params;
+      
+      console.log('Email verification request received:', {
+        token: token ? `${token.substring(0, 10)}...` : 'null',
+        timestamp: new Date().toISOString(),
+        userAgent: req.get('User-Agent'),
+        ip: req.ip
+      });
 
       const hashedToken = hashToken(token);
       
@@ -332,7 +339,15 @@ const authController = {
         emailVerificationToken: hashedToken
       });
 
+      console.log('User lookup result:', {
+        userFound: !!user,
+        userId: user?._id,
+        isEmailVerified: user?.isEmailVerified,
+        timestamp: new Date().toISOString()
+      });
+
       if (!user) {
+        console.log('No user found with verification token, returning error');
         return res.status(400).json({
           success: false,
           error: 'Invalid or expired verification token'
@@ -341,6 +356,7 @@ const authController = {
 
       // If user is already verified, return success message
       if (user.isEmailVerified) {
+        console.log('User already verified, returning alreadyVerified response');
         return res.json({
           success: true,
           message: 'Email already verified. Please log in to continue.',
@@ -349,12 +365,16 @@ const authController = {
       }
 
       // Verify the email
+      console.log('Verifying email for user:', user._id);
       user.isEmailVerified = true;
       user.emailVerificationToken = undefined;
       await user.save();
 
+      console.log('Email verification successful for user:', user._id);
+
       try {
         await emailService.sendWelcomeEmail(user);
+        console.log('Welcome email sent to user:', user._id);
       } catch (emailError) {
         console.error('Failed to send welcome email:', emailError);
       }
