@@ -73,6 +73,7 @@ const Login = () => {
         password,
         firstName: firstName || displayName || email.split('@')[0], // Ensure we always have a firstName
         lastName: lastName || 'User', // Ensure we always have a lastName
+        displayName: displayName || '', // Include displayName in registration
         role: 'user'
       };
 

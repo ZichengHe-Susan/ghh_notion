@@ -25,9 +25,28 @@ const ProfileInfoEditor = () => {
   const [message, setMessage] = useState({ type: '', text: '' });
   const [isEditing, setIsEditing] = useState(false);
 
+  // Debug logging
+  console.log('=== ProfileInfoEditor Render Debug ===');
+  console.log('Component rendered');
+  console.log('user from useAuth:', user);
+  console.log('user type:', typeof user);
+  console.log('user keys:', user ? Object.keys(user) : 'user is null/undefined');
+  console.log('formData:', formData);
+  console.log('isEditing:', isEditing);
+
   useEffect(() => {
+    console.log('=== useEffect Debug ===');
+    console.log('useEffect triggered');
+    console.log('user in useEffect:', user);
+    
     if (user) {
-      setFormData({
+      console.log('User exists, setting form data');
+      console.log('user.firstName:', user.firstName);
+      console.log('user.lastName:', user.lastName);
+      console.log('user.displayName:', user.displayName);
+      console.log('user.email:', user.email);
+      
+      const newFormData = {
         firstName: user.firstName || '',
         lastName: user.lastName || '',
         displayName: user.displayName || '',
@@ -42,7 +61,12 @@ const ProfileInfoEditor = () => {
             sms: user.profile?.preferences?.notifications?.sms ?? false
           }
         }
-      });
+      };
+      
+      console.log('New form data to be set:', newFormData);
+      setFormData(newFormData);
+    } else {
+      console.log('User is null/undefined, not setting form data');
     }
   }, [user]);
 
@@ -105,12 +129,6 @@ const ProfileInfoEditor = () => {
           lastName: formData.lastName,
           displayName: formData.displayName
         };
-        
-        console.log('=== Frontend Debug ===');
-        console.log('formData:', formData);
-        console.log('user:', user);
-        console.log('hasBasicInfoChanges:', hasBasicInfoChanges);
-        console.log('basicInfoData:', basicInfoData);
 
         // Only include email if it's different and password if email is changing
         if (formData.email !== user.email) {
@@ -278,6 +296,14 @@ const ProfileInfoEditor = () => {
             <label htmlFor="displayName" className="form-label">
               Display Name
             </label>
+            {/* Debug displayName input */}
+            {console.log('=== DisplayName Input Debug ===')}
+            {console.log('formData.displayName:', formData.displayName)}
+            {console.log('typeof formData.displayName:', typeof formData.displayName)}
+            {console.log('formData.displayName length:', formData.displayName?.length)}
+            {console.log('formData.displayName === "":', formData.displayName === '')}
+            {console.log('formData.displayName === null:', formData.displayName === null)}
+            {console.log('formData.displayName === undefined:', formData.displayName === undefined)}
             <input
               type="text"
               id="displayName"

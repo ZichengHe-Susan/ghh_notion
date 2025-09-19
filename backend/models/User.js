@@ -17,10 +17,7 @@ const userSchema = new mongoose.Schema({
   displayName: {
     type: String,
     trim: true,
-    maxlength: [50, 'Display name cannot exceed 50 characters'],
-    default: function() {
-      return `${this.firstName} ${this.lastName}`;
-    }
+    maxlength: [50, 'Display name cannot exceed 50 characters']
   },
   email: {
     type: String,
@@ -240,6 +237,14 @@ userSchema.pre('save', async function(next) {
   } catch (error) {
     next(error);
   }
+});
+
+// Set displayName if not provided
+userSchema.pre('save', function(next) {
+  if (!this.displayName && this.firstName && this.lastName) {
+    this.displayName = `${this.firstName} ${this.lastName}`;
+  }
+  next();
 });
 
 // Instance method to check password

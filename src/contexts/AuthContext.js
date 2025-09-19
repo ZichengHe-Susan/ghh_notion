@@ -29,8 +29,13 @@ export const AuthProvider = ({ children }) => {
         try {
           // Verify token is still valid by getting profile
           const result = await apiService.getProfile();
+          console.log('=== AuthContext Debug ===');
+          console.log('API result:', result);
           if (result.success) {
             const profileData = result.data.data || result.data;
+            console.log('Profile data:', profileData);
+            console.log('User data:', profileData.user);
+            console.log('User displayName:', profileData.user?.displayName);
             setCurrentUser({ id: profileData.user.id, email: profileData.user.email });
             setUserData(profileData.user);
             setIsEmailVerified(profileData.user.isEmailVerified || false);
@@ -179,8 +184,13 @@ export const AuthProvider = ({ children }) => {
       }
 
       const result = await apiService.getProfile();
+      console.log('=== validateToken Debug ===');
+      console.log('API result in validateToken:', result);
       if (result.success) {
         const profileData = result.data.data || result.data;
+        console.log('Profile data in validateToken:', profileData);
+        console.log('User data in validateToken:', profileData.user);
+        console.log('User displayName in validateToken:', profileData.user?.displayName);
         setCurrentUser({ id: profileData.user.id, email: profileData.user.email });
         setUserData(profileData.user);
         setIsEmailVerified(profileData.user.isEmailVerified || false);

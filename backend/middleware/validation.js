@@ -19,6 +19,22 @@ const validateRegistration = [
     .matches(/^[a-zA-Z\s]+$/)
     .withMessage('Last name can only contain letters and spaces'),
   
+  body('displayName')
+    .optional()
+    .trim()
+    .custom((value) => {
+      if (value === '' || value === null || value === undefined) {
+        return true; // Allow empty values
+      }
+      if (value.length < 2 || value.length > 50) {
+        throw new Error('Display name must be between 2 and 50 characters');
+      }
+      if (!/^[a-zA-Z0-9\s._-]+$/.test(value)) {
+        throw new Error('Display name can only contain letters, numbers, spaces, dots, underscores, and hyphens');
+      }
+      return true;
+    }),
+  
   body('email')
     .isEmail()
     .withMessage('Please provide a valid email address')

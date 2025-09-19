@@ -24,15 +24,38 @@ const userController = {
         });
       }
 
+      console.log('=== getProfile Backend Debug ===');
+      console.log('User from database:', {
+        _id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        displayName: user.displayName,
+        email: user.email
+      });
+      console.log('Full user object keys:', Object.keys(user));
+
       const stats = await getUserStats(req.user._id);
 
-      res.json({
+      const responseData = {
         success: true,
         data: {
           user,
           stats
         }
+      };
+
+      console.log('Response data being sent:', {
+        success: responseData.success,
+        user: {
+          _id: responseData.data.user._id,
+          firstName: responseData.data.user.firstName,
+          lastName: responseData.data.user.lastName,
+          displayName: responseData.data.user.displayName,
+          email: responseData.data.user.email
+        }
       });
+
+      res.json(responseData);
     } catch (error) {
       console.error('Get profile error:', error);
       res.status(500).json({
@@ -127,12 +150,8 @@ const userController = {
 
   updateUserInfo: async (req, res) => {
     try {
-      console.log('=== updateUserInfo Debug ===');
-      console.log('Request body:', JSON.stringify(req.body, null, 2));
-      
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
-        console.log('Validation errors:', errors.array());
         return res.status(400).json({
           success: false,
           error: 'Validation failed',
@@ -187,9 +206,9 @@ const userController = {
       }
 
       // Update other fields
-      if (firstName) user.firstName = firstName;
-      if (lastName) user.lastName = lastName;
-      if (displayName) user.displayName = displayName;
+      if (firstName !== undefined) user.firstName = firstName;
+      if (lastName !== undefined) user.lastName = lastName;
+      if (displayName !== undefined) user.displayName = displayName;
 
       await user.save();
 

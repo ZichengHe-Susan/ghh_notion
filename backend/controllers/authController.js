@@ -19,7 +19,7 @@ const authController = {
         });
       }
 
-      const { firstName, lastName, email, password } = req.body;
+      const { firstName, lastName, displayName, email, password } = req.body;
 
       const existingUser = await User.findByEmail(email);
       if (existingUser) {
@@ -32,6 +32,7 @@ const authController = {
       const user = new User({
         firstName,
         lastName,
+        displayName: displayName || `${firstName} ${lastName}`, // Use provided displayName or default to first + last name
         email,
         password,
         role: 'user'
@@ -440,6 +441,15 @@ const authController = {
 
   getProfile: async (req, res) => {
     try {
+      console.log('=== Auth getProfile Debug ===');
+      console.log('req.user:', {
+        _id: req.user._id,
+        firstName: req.user.firstName,
+        lastName: req.user.lastName,
+        displayName: req.user.displayName,
+        email: req.user.email
+      });
+
       res.json({
         success: true,
         data: {
@@ -447,6 +457,7 @@ const authController = {
             id: req.user._id,
             firstName: req.user.firstName,
             lastName: req.user.lastName,
+            displayName: req.user.displayName,
             email: req.user.email,
             role: req.user.role,
             isEmailVerified: req.user.isEmailVerified,
