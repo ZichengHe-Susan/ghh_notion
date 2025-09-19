@@ -4,7 +4,7 @@
   margin: 0 auto;
   padding: 24px;
   background-color: #f8f9fa;
-  min-height: 100vh;
+  max-height: 100%;
 }
 
 .edit-profile__header {
