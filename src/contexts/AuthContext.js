@@ -36,6 +36,7 @@ export const AuthProvider = ({ children }) => {
             console.log('Profile data:', profileData);
             console.log('User data:', profileData.user);
             console.log('User displayName:', profileData.user?.displayName);
+            console.log('User pendingEmail:', profileData.user?.pendingEmail);
             setCurrentUser({ id: profileData.user.id, email: profileData.user.email });
             setUserData(profileData.user);
             setIsEmailVerified(profileData.user.isEmailVerified || false);
@@ -191,6 +192,7 @@ export const AuthProvider = ({ children }) => {
         console.log('Profile data in validateToken:', profileData);
         console.log('User data in validateToken:', profileData.user);
         console.log('User displayName in validateToken:', profileData.user?.displayName);
+        console.log('User pendingEmail in validateToken:', profileData.user?.pendingEmail);
         setCurrentUser({ id: profileData.user.id, email: profileData.user.email });
         setUserData(profileData.user);
         setIsEmailVerified(profileData.user.isEmailVerified || false);

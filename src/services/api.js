@@ -366,6 +366,12 @@ class ApiService {
     });
   }
 
+  async resendEmailChangeVerification() {
+    return this.request('/users/resend-email-change-verification', {
+      method: 'POST',
+    });
+  }
+
   async getUserProfile(userId) {
     return this.request(`/users/${userId}`);
   }

@@ -108,6 +108,35 @@ const EmailEditor = () => {
     setMessage({ type: '', text: '' });
   };
 
+  const handleResendVerification = async () => {
+    setLoading(true);
+    setMessage({ type: '', text: '' });
+
+    try {
+      const response = await api.resendEmailChangeVerification();
+
+      if (response.success) {
+        setMessage({ 
+          type: 'success', 
+          text: response.message || 'Verification email sent successfully to your new email address' 
+        });
+      } else {
+        setMessage({ 
+          type: 'error', 
+          text: response.error || 'Failed to resend verification email' 
+        });
+      }
+    } catch (error) {
+      console.error('Error resending verification email:', error);
+      setMessage({ 
+        type: 'error', 
+        text: error.message || 'Failed to resend verification email' 
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (!user) {
     return <div className="email-editor">Loading...</div>;
   }
@@ -136,14 +165,11 @@ const EmailEditor = () => {
             <div className="pending-email-actions">
               <button
                 type="button"
-                onClick={() => {
-                  // Option to resend verification email
-                  // This would require a new API endpoint
-                  console.log('Resend verification email');
-                }}
+                onClick={handleResendVerification}
+                disabled={loading}
                 className="btn btn--secondary btn--small"
               >
-                Resend Verification Email
+                {loading ? 'Sending...' : 'Resend Verification Email'}
               </button>
             </div>
           </div>

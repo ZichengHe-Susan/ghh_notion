@@ -697,6 +697,54 @@ const userController = {
         error: 'Failed to get verification status'
       });
     }
+  },
+
+  resendEmailChangeVerification: async (req, res) => {
+    try {
+      const user = await User.findById(req.user._id);
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          error: 'User not found'
+        });
+      }
+
+      if (!user.pendingEmail) {
+        return res.status(400).json({
+          success: false,
+          error: 'No pending email change found'
+        });
+      }
+
+      // Generate new verification token
+      const { generateEmailVerificationToken, hashToken } = require('../utils/jwt');
+      const verificationToken = generateEmailVerificationToken();
+      user.emailVerificationToken = hashToken(verificationToken);
+      await user.save();
+
+      // Send verification email to the pending email address
+      const userWithPendingEmail = { ...user.toObject(), email: user.pendingEmail };
+      try {
+        await emailService.sendEmailChangeVerificationEmail(userWithPendingEmail, verificationToken);
+      } catch (emailError) {
+        console.error('Failed to send email change verification email:', emailError);
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to send verification email'
+        });
+      }
+
+      res.json({
+        success: true,
+        message: 'Verification email sent successfully to your new email address'
+      });
+    } catch (error) {
+      console.error('Resend email change verification error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to resend verification email'
+      });
+    }
   }
 };
 

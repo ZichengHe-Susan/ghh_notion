@@ -571,6 +571,7 @@ const authController = {
             lastName: req.user.lastName,
             displayName: req.user.displayName,
             email: req.user.email,
+            pendingEmail: req.user.pendingEmail,
             role: req.user.role,
             isEmailVerified: req.user.isEmailVerified,
             avatar: req.user.avatar,

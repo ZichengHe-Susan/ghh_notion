@@ -64,4 +64,9 @@ router.post('/verification', auth, validateVerificationSubmission, userControlle
 // @access  Private
 router.get('/verification', auth, userController.getVerificationStatus);
 
+// @route   POST /api/users/resend-email-change-verification
+// @desc    Resend email change verification email
+// @access  Private
+router.post('/resend-email-change-verification', auth, userController.resendEmailChangeVerification);
+
 module.exports = router;
