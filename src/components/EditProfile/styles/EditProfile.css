@@ -44,7 +44,7 @@
 
 .edit-profile__sidebar {
   position: sticky;
-  top: 24px;
+  top: 72px; /* Increased to account for sticky tabs (48px) + some margin (24px) */
 }
 
 .edit-profile__nav {
