@@ -122,6 +122,14 @@ const authController = {
         });
       }
 
+      // Check if email is verified
+      if (!user.isEmailVerified) {
+        return res.status(401).json({
+          success: false,
+          error: 'Please verify your email before logging in. Check your inbox for a verification link.'
+        });
+      }
+
       user.lastLogin = new Date();
       await user.save();
 
@@ -318,9 +326,10 @@ const authController = {
       const { token } = req.params;
 
       const hashedToken = hashToken(token);
+      
+      // First check if user exists with this token (regardless of verification status)
       const user = await User.findOne({
-        emailVerificationToken: hashedToken,
-        isEmailVerified: false
+        emailVerificationToken: hashedToken
       });
 
       if (!user) {
@@ -330,6 +339,16 @@ const authController = {
         });
       }
 
+      // If user is already verified, return success message
+      if (user.isEmailVerified) {
+        return res.json({
+          success: true,
+          message: 'Email already verified. Please log in to continue.',
+          alreadyVerified: true
+        });
+      }
+
+      // Verify the email
       user.isEmailVerified = true;
       user.emailVerificationToken = undefined;
       await user.save();

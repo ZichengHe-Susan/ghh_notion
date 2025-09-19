@@ -5,7 +5,7 @@ import apiService from '../services/api';
 const EmailVerification = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [status, setStatus] = useState('verifying'); // 'verifying', 'success', 'error'
+  const [status, setStatus] = useState('verifying'); // 'verifying', 'success', 'error', 'alreadyVerified'
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -27,8 +27,13 @@ const EmailVerification = () => {
       });
 
       if (result.success) {
-        setStatus('success');
-        setMessage('Email verified successfully! You can now log in.');
+        if (result.alreadyVerified) {
+          setStatus('alreadyVerified');
+          setMessage('Your email is already verified. Please log in to continue.');
+        } else {
+          setStatus('success');
+          setMessage('Email verified successfully! You can now log in.');
+        }
       } else {
         setStatus('error');
         setMessage(result.error || 'Email verification failed');
@@ -77,6 +82,44 @@ const EmailVerification = () => {
           <>
             <div style={{ fontSize: '48px', marginBottom: '20px' }}>✅</div>
             <h2 style={{ color: '#28a745', marginBottom: '20px' }}>Email Verified!</h2>
+            <p style={{ color: '#666', marginBottom: '30px' }}>{message}</p>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+              <button 
+                onClick={handleLogin}
+                style={{
+                  backgroundColor: '#007bff',
+                  color: 'white',
+                  padding: '12px 24px',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: 'pointer',
+                  fontSize: '16px'
+                }}
+              >
+                Go to Login
+              </button>
+              <button 
+                onClick={handleHome}
+                style={{
+                  backgroundColor: '#6c757d',
+                  color: 'white',
+                  padding: '12px 24px',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: 'pointer',
+                  fontSize: '16px'
+                }}
+              >
+                Go to Home
+              </button>
+            </div>
+          </>
+        )}
+
+        {status === 'alreadyVerified' && (
+          <>
+            <div style={{ fontSize: '48px', marginBottom: '20px' }}>ℹ️</div>
+            <h2 style={{ color: '#17a2b8', marginBottom: '20px' }}>Already Verified</h2>
             <p style={{ color: '#666', marginBottom: '30px' }}>{message}</p>
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
               <button 

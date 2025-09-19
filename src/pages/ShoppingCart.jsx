@@ -22,6 +22,10 @@ const ShoppingCart = () => {
     const [selectedAddress, setSelectedAddress] = useState(null);
 
     useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
+
+    useEffect(() => {
         if (!currentUser) {
           navigate('/login');
         }
