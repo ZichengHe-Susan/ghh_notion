@@ -359,6 +359,13 @@ class ApiService {
     });
   }
 
+  async updateUserInfo(userData) {
+    return this.request('/users/info', {
+      method: 'PUT',
+      body: JSON.stringify(userData),
+    });
+  }
+
   async getUserProfile(userId) {
     return this.request(`/users/${userId}`);
   }

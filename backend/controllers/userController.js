@@ -56,6 +56,7 @@ const userController = {
       const {
         firstName,
         lastName,
+        displayName,
         phone,
         bio,
         location,
@@ -72,6 +73,7 @@ const userController = {
 
       if (firstName) user.firstName = firstName;
       if (lastName) user.lastName = lastName;
+      if (displayName) user.displayName = displayName;
       if (phone) user.profile.phone = phone;
       if (bio) user.profile.bio = bio;
       if (location) user.profile.location = location;
@@ -104,6 +106,7 @@ const userController = {
             _id: user._id,
             firstName: user.firstName,
             lastName: user.lastName,
+            displayName: user.displayName,
             email: user.email,
             avatar: user.avatar,
             profile: user.profile,
@@ -118,6 +121,109 @@ const userController = {
       res.status(500).json({
         success: false,
         error: 'Failed to update profile'
+      });
+    }
+  },
+
+  updateUserInfo: async (req, res) => {
+    try {
+      console.log('=== updateUserInfo Debug ===');
+      console.log('Request body:', JSON.stringify(req.body, null, 2));
+      
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        console.log('Validation errors:', errors.array());
+        return res.status(400).json({
+          success: false,
+          error: 'Validation failed',
+          details: errors.array()
+        });
+      }
+
+      const {
+        firstName,
+        lastName,
+        displayName,
+        email,
+        password
+      } = req.body;
+
+      const user = await User.findById(req.user._id).select('+password');
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          error: 'User not found'
+        });
+      }
+
+      // If email is being changed, verify password
+      if (email && email !== user.email) {
+        if (!password) {
+          return res.status(400).json({
+            success: false,
+            error: 'Password is required to change email address'
+          });
+        }
+
+        const isPasswordValid = await user.comparePassword(password);
+        if (!isPasswordValid) {
+          return res.status(400).json({
+            success: false,
+            error: 'Invalid password'
+          });
+        }
+
+        // Check if email already exists
+        const existingUser = await User.findOne({ email: email.toLowerCase() });
+        if (existingUser && existingUser._id.toString() !== user._id.toString()) {
+          return res.status(400).json({
+            success: false,
+            error: 'Email address is already in use'
+          });
+        }
+
+        user.email = email.toLowerCase();
+        user.isEmailVerified = false; // Reset email verification status
+      }
+
+      // Update other fields
+      if (firstName) user.firstName = firstName;
+      if (lastName) user.lastName = lastName;
+      if (displayName) user.displayName = displayName;
+
+      await user.save();
+
+      await createNotification({
+        user: user._id,
+        type: 'account_verified',
+        title: 'Account Information Updated',
+        message: 'Your account information has been successfully updated.',
+        category: 'account',
+        priority: 'normal'
+      });
+
+      res.json({
+        success: true,
+        message: 'User information updated successfully',
+        data: {
+          user: {
+            _id: user._id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            displayName: user.displayName,
+            email: user.email,
+            avatar: user.avatar,
+            role: user.role,
+            isEmailVerified: user.isEmailVerified,
+            verification: user.verification
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Update user info error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to update user information'
       });
     }
   },

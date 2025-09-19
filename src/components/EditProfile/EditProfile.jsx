@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 import UsernameEditor from './UsernameEditor';
 import AddressBookEditor from './AddressBookEditor';
 import ProfileInfoEditor from './ProfileInfoEditor';

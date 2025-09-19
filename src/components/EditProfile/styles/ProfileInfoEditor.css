@@ -25,6 +25,32 @@
   line-height: 1.4;
 }
 
+.edit-mode-indicator {
+  margin-top: 12px;
+  padding: 8px 12px;
+  background-color: #e3f2fd;
+  border: 1px solid #2196f3;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.edit-mode-badge {
+  background-color: #2196f3;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.edit-mode-text {
+  color: #1976d2;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
 .profile-info-editor__form {
   margin-bottom: 24px;
 }
@@ -51,6 +77,17 @@
 
 .form-group {
   margin-bottom: 20px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.form-row .form-group {
+  margin-bottom: 0;
 }
 
 .form-label {
@@ -81,6 +118,17 @@
   background-color: #f8f9fa;
   color: #6c757d;
   cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.form-input:not(:disabled) {
+  background-color: #ffffff;
+  border-color: #e1e5e9;
+}
+
+.form-input:not(:disabled):focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
 }
 
 .form-textarea {
@@ -105,6 +153,17 @@
   background-color: #f8f9fa;
   color: #6c757d;
   cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.form-textarea:not(:disabled) {
+  background-color: #ffffff;
+  border-color: #e1e5e9;
+}
+
+.form-textarea:not(:disabled):focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
 }
 
 .form-help {
@@ -280,6 +339,15 @@
 @media (max-width: 768px) {
   .profile-info-editor {
     padding: 16px;
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  
+  .form-row .form-group {
+    margin-bottom: 20px;
   }
   
   .profile-info-editor__actions {

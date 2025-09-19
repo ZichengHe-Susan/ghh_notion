@@ -110,6 +110,14 @@ const validateProfileUpdate = [
     .matches(/^[a-zA-Z\s]+$/)
     .withMessage('Last name can only contain letters and spaces'),
   
+  body('displayName')
+    .optional()
+    .trim()
+    .isLength({ min: 2, max: 50 })
+    .withMessage('Display name must be between 2 and 50 characters')
+    .matches(/^[a-zA-Z0-9\s._-]+$/)
+    .withMessage('Display name can only contain letters, numbers, spaces, dots, underscores, and hyphens'),
+  
   body('profile.phone')
     .optional()
     .isMobilePhone()
@@ -125,6 +133,68 @@ const validateProfileUpdate = [
     .trim()
     .isLength({ max: 100 })
     .withMessage('Location cannot exceed 100 characters')
+];
+
+const validateUserInfoUpdate = [
+  body('firstName')
+    .optional()
+    .trim()
+    .custom((value) => {
+      if (value === '' || value === null || value === undefined) {
+        return true; // Allow empty values
+      }
+      if (value.length < 2 || value.length > 50) {
+        throw new Error('First name must be between 2 and 50 characters');
+      }
+      if (!/^[a-zA-Z\s]+$/.test(value)) {
+        throw new Error('First name can only contain letters and spaces');
+      }
+      return true;
+    }),
+  
+  body('lastName')
+    .optional()
+    .trim()
+    .custom((value) => {
+      if (value === '' || value === null || value === undefined) {
+        return true; // Allow empty values
+      }
+      if (value.length < 2 || value.length > 50) {
+        throw new Error('Last name must be between 2 and 50 characters');
+      }
+      if (!/^[a-zA-Z\s]+$/.test(value)) {
+        throw new Error('Last name can only contain letters and spaces');
+      }
+      return true;
+    }),
+  
+  body('displayName')
+    .optional()
+    .trim()
+    .custom((value) => {
+      if (value === '' || value === null || value === undefined) {
+        return true; // Allow empty values
+      }
+      if (value.length < 2 || value.length > 50) {
+        throw new Error('Display name must be between 2 and 50 characters');
+      }
+      if (!/^[a-zA-Z0-9\s._-]+$/.test(value)) {
+        throw new Error('Display name can only contain letters, numbers, spaces, dots, underscores, and hyphens');
+      }
+      return true;
+    }),
+  
+  body('email')
+    .optional()
+    .isEmail()
+    .withMessage('Please provide a valid email address')
+    .normalizeEmail()
+    .toLowerCase(),
+  
+  body('password')
+    .optional()
+    .isLength({ min: 1 })
+    .withMessage('Password cannot be empty if provided')
 ];
 
 const validatePasswordChange = [
@@ -745,6 +815,7 @@ module.exports = {
   validateRefreshToken,
   validateLogout,
   validateProfileUpdate,
+  validateUserInfoUpdate,
   validatePasswordChange,
   validateEmailChange,
   validateNotificationPreferences,

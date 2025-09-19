@@ -6,7 +6,7 @@ const userController = require('../controllers/userController');
 
 // Import middleware
 const { auth } = require('../middleware/auth');
-const { validateProfileUpdate, validateVerificationSubmission } = require('../middleware/validation');
+const { validateProfileUpdate, validateUserInfoUpdate, validateVerificationSubmission } = require('../middleware/validation');
 const { uploadSingle } = require('../middleware/upload');
 
 // @route   GET /api/users/profile
@@ -18,6 +18,11 @@ router.get('/profile', auth, userController.getProfile);
 // @desc    Update user profile
 // @access  Private
 router.put('/profile', auth, validateProfileUpdate, userController.updateProfile);
+
+// @route   PUT /api/users/info
+// @desc    Update user basic information (name, display name, email)
+// @access  Private
+router.put('/info', auth, validateUserInfoUpdate, userController.updateUserInfo);
 
 // @route   DELETE /api/users/profile
 // @desc    Delete user account
