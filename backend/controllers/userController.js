@@ -5,6 +5,7 @@ const Review = require('../models/Review');
 const Notification = require('../models/Notification');
 const s3Service = require('../services/s3Service');
 const emailService = require('../services/emailService');
+const config = require('../config/config');
 const { validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
 
@@ -497,7 +498,7 @@ const userController = {
           user,
           'Verification Submitted',
           'Your seller verification documents have been submitted and are under review. You will be notified once the review is complete.',
-          `${process.env.FRONTEND_URL}/profile`
+          `${config.FRONTEND_URL}/profile`
         );
       } catch (emailError) {
         console.error('Failed to send verification email:', emailError);

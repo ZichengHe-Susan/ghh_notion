@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import '../css/login.scss'; 
 import { Typography, Button, TextField, Grid, Link, Box, Container } from '@mui/material';
-import { useNavigate } from 'react-router-dom'; 
+import { useNavigate, useSearchParams } from 'react-router-dom'; 
 import Home from './Home';
 import Item from '../Item';
 import { secureLog } from '../utils/secureLogger';
@@ -17,7 +17,34 @@ const Login = () => {
   const [lastName, setLastName] = useState('');
 
   const navigate = useNavigate(); 
-  const { login, register } = useAuth();
+  const [searchParams] = useSearchParams();
+  const { login, register, resendVerification } = useAuth();
+
+  // Check for verification message in URL
+  useEffect(() => {
+    const message = searchParams.get('message');
+    if (message) {
+      setError(message);
+    }
+  }, [searchParams]);
+
+  const handleResendVerification = async () => {
+    if (!email) {
+      setError('Please enter your email address first');
+      return;
+    }
+    
+    try {
+      const result = await resendVerification(email);
+      if (result.success) {
+        setError('Verification email sent! Please check your inbox.');
+      } else {
+        setError(result.error || 'Failed to send verification email');
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to send verification email');
+    }
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -52,8 +79,9 @@ const Login = () => {
       secureLog('Preparing registration data:', userData);
       const result = await register(userData);
       if (result.success) {
-        setError('Registration successful');
-        navigate('/');
+        setError('Registration successful! Please check your email for verification. You will need to verify your email before logging in.');
+        // Don't navigate to home - user needs to verify email first
+        setIsRegistering(false); // Switch back to login view
       } else {
         setError(result.error || 'Registration failed');
       }
@@ -150,6 +178,27 @@ const Login = () => {
               {isRegistering ? 'Register' : 'Sign in'}
             </button>
           </div>
+          {!isRegistering && (
+            <div className="form-group">
+              <button 
+                type="button" 
+                className="resend-verification-button"
+                onClick={handleResendVerification}
+                style={{
+                  background: 'transparent',
+                  border: '1px solid #ccc',
+                  color: '#666',
+                  padding: '8px 16px',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  width: '100%'
+                }}
+              >
+                Resend Verification Email
+              </button>
+            </div>
+          )}
         </form>
         <div className="login-footer">
           <p>

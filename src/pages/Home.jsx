@@ -12,15 +12,22 @@ import Copyright from '../components/Copyright';
 const Home = () => {
   const [scrollPosition, setScrollPosition] = useState(0);
   const [showDetails, setShowDetails] = useState(false);
-  const { currentUser, userData, logout } = useAuth();
+  const { currentUser, userData, logout, isEmailVerified } = useAuth();
   const navigate = useNavigate(); 
   const [showProfile, setShowProfile] = useState(false);
 
   useEffect(() => {
+    // Redirect to login if user is not logged in
     if (!currentUser) {
       navigate('/login');
+      return;
     }
-  }, [currentUser, navigate]);
+    
+    // If logged in but not verified, redirect to login with verification message
+    if (currentUser && !isEmailVerified) {
+      navigate('/login?message=Please verify your email before accessing this page');
+    }
+  }, [currentUser, isEmailVerified, navigate]);
 
   const handleScroll = () => {
     const position = window.scrollY;

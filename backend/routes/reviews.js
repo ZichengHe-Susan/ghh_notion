@@ -18,18 +18,18 @@ const {
 
 // @route   GET /api/reviews
 // @desc    Get all reviews with filtering and pagination
-// @access  Public
-router.get('/', validateReviewQuery, reviewController.getReviews);
+// @access  Private
+router.get('/', auth, validateReviewQuery, reviewController.getReviews);
 
 // @route   GET /api/reviews/recent
 // @desc    Get recent reviews
-// @access  Public
-router.get('/recent', reviewController.getRecentReviews);
+// @access  Private
+router.get('/recent', auth, reviewController.getRecentReviews);
 
 // @route   GET /api/reviews/top-rated
 // @desc    Get top rated reviews
-// @access  Public
-router.get('/top-rated', reviewController.getTopRatedReviews);
+// @access  Private
+router.get('/top-rated', auth, reviewController.getTopRatedReviews);
 
 // @route   GET /api/reviews/analytics/stats
 // @desc    Get review analytics statistics
@@ -38,18 +38,18 @@ router.get('/analytics/stats', auth, authorize('admin', 'super_admin'), reviewCo
 
 // @route   GET /api/reviews/item/:itemId
 // @desc    Get reviews for specific item
-// @access  Public
-router.get('/item/:itemId', validateReviewQuery, reviewController.getItemReviews);
+// @access  Private
+router.get('/item/:itemId', auth, validateReviewQuery, reviewController.getItemReviews);
 
 // @route   GET /api/reviews/user/:userId
 // @desc    Get reviews by specific user
-// @access  Public
-router.get('/user/:userId', validateReviewQuery, reviewController.getUserReviews);
+// @access  Private
+router.get('/user/:userId', auth, validateReviewQuery, reviewController.getUserReviews);
 
 // @route   GET /api/reviews/:id
 // @desc    Get single review
-// @access  Public
-router.get('/:id', reviewController.getReview);
+// @access  Private
+router.get('/:id', auth, reviewController.getReview);
 
 // @route   POST /api/reviews
 // @desc    Create new review

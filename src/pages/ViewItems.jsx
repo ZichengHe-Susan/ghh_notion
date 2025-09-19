@@ -8,7 +8,7 @@ import '../css/ViewItems.css';
 const ViewItems = () => {
   const [itemsList, setItemsList] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { currentUser } = useAuth();
+  const { currentUser, isEmailVerified } = useAuth();
   const { addToCart } = useCart();
 
   useEffect(() => {
@@ -110,12 +110,12 @@ const ViewItems = () => {
               </Link> 
               <p className="itemPrice">Price: ${item.price}</p>
               <div className="button-group">
-              {currentUser && currentUser.id !== item.seller && 
+              {currentUser && isEmailVerified && currentUser.id !== item.seller && 
                 (<button
                   className="addToCartButton" 
                   onClick={() => handleAddToCart(item)} 
                   >Add to Cart</button>)}
-                  {currentUser && currentUser.id === item.seller && ( 
+                  {currentUser && isEmailVerified && currentUser.id === item.seller && ( 
                   <button className="deleteButton" onClick={() => deleteItem(item._id)}>
                     Delete Item
                 </button>

@@ -16,7 +16,7 @@ class EmailService {
 
   // Send email verification
   async sendVerificationEmail(user, verificationToken) {
-    const verificationUrl = `${config.CLIENT_URL}/verify-email?token=${verificationToken}`;
+    const verificationUrl = `${config.FRONTEND_URL}/verify-email?token=${verificationToken}`;
     
     const mailOptions = {
       from: config.EMAIL_FROM,
@@ -58,7 +58,7 @@ class EmailService {
 
   // Send password reset email
   async sendPasswordResetEmail(user, resetToken) {
-    const resetUrl = `${config.CLIENT_URL}/reset-password?token=${resetToken}`;
+    const resetUrl = `${config.FRONTEND_URL}/reset-password?token=${resetToken}`;
     
     const mailOptions = {
       from: config.EMAIL_FROM,
@@ -119,7 +119,7 @@ class EmailService {
             </ul>
           </div>
           <div style="text-align: center; margin: 30px 0;">
-            <a href="${config.CLIENT_URL}" 
+            <a href="${config.FRONTEND_URL}" 
                style="background-color: #28a745; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
               Start Shopping
             </a>

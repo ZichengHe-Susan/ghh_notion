@@ -13,6 +13,7 @@ import Checkout from './pages/Checkout';
 import ChatInterface from './components/ChatInterface';
 import ChatButton from './components/ChatButton';
 import EmailVerification from './pages/EmailVerification';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   const [showChat, setShowChat] = useState(false);
@@ -23,13 +24,13 @@ function App() {
         <CartProvider>
           <SocketProvider>
             <Routes>
-              <Route path="/" element={<Home />} />
+              <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
               <Route path="/login" element={<Login />} />
-              <Route path="/upload" element={<AddItem />} />
-              <Route path="/items" element={<ViewItems />} />
-              <Route path="/cart" element={<ShoppingCart />} />
-              <Route path="/item/:id" element={<ItemDetails />} />
-              <Route path="/checkedOut" element={<Checkout />} />
+              <Route path="/upload" element={<ProtectedRoute><AddItem /></ProtectedRoute>} />
+              <Route path="/items" element={<ProtectedRoute><ViewItems /></ProtectedRoute>} />
+              <Route path="/cart" element={<ProtectedRoute><ShoppingCart /></ProtectedRoute>} />
+              <Route path="/item/:id" element={<ProtectedRoute><ItemDetails /></ProtectedRoute>} />
+              <Route path="/checkedOut" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
               <Route path="/verify-email" element={<EmailVerification />} />
             </Routes>
             

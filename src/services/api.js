@@ -77,8 +77,8 @@ class ApiService {
         throw new Error(data.message || data.error || `HTTP ${response.status}: ${response.statusText}`);
       }
 
-      // If the backend response already has success/data structure, return it directly
-      if (data && typeof data === 'object' && 'success' in data && 'data' in data) {
+      // If the backend response already has success structure, return it directly
+      if (data && typeof data === 'object' && 'success' in data) {
         return data;
       }
       
@@ -140,6 +140,13 @@ class ApiService {
 
   async getProfile() {
     return this.request('/auth/profile');
+  }
+
+  async resendVerification(email) {
+    return this.request('/auth/resend-verification', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
   }
 
   // Item methods

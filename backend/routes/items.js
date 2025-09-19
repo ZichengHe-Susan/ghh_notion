@@ -11,28 +11,28 @@ const { validateItem, validateItemUpdate } = require('../middleware/validation')
 
 // @route   GET /api/items
 // @desc    Get all items with pagination and filtering
-// @access  Public
-router.get('/', itemController.getItems);
+// @access  Private
+router.get('/', auth, itemController.getItems);
 
 // @route   GET /api/items/search
 // @desc    Search items
-// @access  Public
-router.get('/search', itemController.searchItems);
+// @access  Private
+router.get('/search', auth, itemController.searchItems);
 
 // @route   GET /api/items/categories
 // @desc    Get item categories
-// @access  Public
-router.get('/categories', itemController.getItemCategories);
+// @access  Private
+router.get('/categories', auth, itemController.getItemCategories);
 
 // @route   GET /api/items/seller/:sellerId
 // @desc    Get items by seller
-// @access  Public
-router.get('/seller/:sellerId', itemController.getItemsBySeller);
+// @access  Private
+router.get('/seller/:sellerId', auth, itemController.getItemsBySeller);
 
 // @route   GET /api/items/:id
 // @desc    Get single item
-// @access  Public
-router.get('/:id', itemController.getItem);
+// @access  Private
+router.get('/:id', auth, itemController.getItem);
 
 // @route   POST /api/items
 // @desc    Create new item
