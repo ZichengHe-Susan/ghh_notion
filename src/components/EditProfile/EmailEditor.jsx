@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import api from '../../services/api';
-import './styles/UsernameEditor.css';
+import './styles/EmailEditor.css';
 
-const UsernameEditor = () => {
+const EmailEditor = () => {
   const { user, updateUser } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
@@ -109,14 +109,14 @@ const UsernameEditor = () => {
   };
 
   if (!user) {
-    return <div className="username-editor">Loading...</div>;
+    return <div className="email-editor">Loading...</div>;
   }
 
   return (
-    <div className="username-editor">
-      <div className="username-editor__header">
+    <div className="email-editor">
+      <div className="email-editor__header">
         <h3>Email Address</h3>
-        <p className="username-editor__description">
+        <p className="email-editor__description">
           Update your email address for account access and notifications
         </p>
       </div>
@@ -127,7 +127,7 @@ const UsernameEditor = () => {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="username-editor__form">
+      <form onSubmit={handleSubmit} className="email-editor__form">
         <div className="form-group">
           <label htmlFor="email" className="form-label">
             Email Address *
@@ -169,7 +169,7 @@ const UsernameEditor = () => {
           </div>
         )}
 
-        <div className="username-editor__actions">
+        <div className="email-editor__actions">
           {!isEditing ? (
             <button
               type="button"
@@ -200,7 +200,7 @@ const UsernameEditor = () => {
         </div>
       </form>
 
-      <div className="username-editor__info">
+      <div className="email-editor__info">
         <h4>Email Address Information</h4>
         <ul>
           <li>Your email address is used for login and account notifications</li>
@@ -213,4 +213,4 @@ const UsernameEditor = () => {
   );
 };
 
-export default UsernameEditor;
+export default EmailEditor;

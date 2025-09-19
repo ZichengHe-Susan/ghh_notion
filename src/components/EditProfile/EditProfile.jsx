@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import UsernameEditor from './UsernameEditor';
+import EmailEditor from './EmailEditor';
 import AddressBookEditor from './AddressBookEditor';
 import ProfileInfoEditor from './ProfileInfoEditor';
 import './styles/EditProfile.css';
@@ -21,7 +21,7 @@ const EditProfile = () => {
 
   const tabs = [
     { id: 'profile', label: 'Profile Info', component: ProfileInfoEditor },
-    { id: 'username', label: 'Email Address', component: UsernameEditor },
+    { id: 'email', label: 'Email Address', component: EmailEditor },
     { id: 'addresses', label: 'Address Book', component: AddressBookEditor }
   ];
 

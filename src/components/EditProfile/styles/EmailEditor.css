@@ -1,5 +1,5 @@
-/* UsernameEditor.css */
-.username-editor {
+/* EmailEditor.css */
+.email-editor {
   background: #ffffff;
   border-radius: 8px;
   padding: 24px;
@@ -7,25 +7,25 @@
   margin-bottom: 24px;
 }
 
-.username-editor__header {
+.email-editor__header {
   margin-bottom: 24px;
 }
 
-.username-editor__header h3 {
+.email-editor__header h3 {
   margin: 0 0 8px 0;
   color: #333;
   font-size: 1.5rem;
   font-weight: 600;
 }
 
-.username-editor__description {
+.email-editor__description {
   margin: 0;
   color: #666;
   font-size: 0.9rem;
   line-height: 1.4;
 }
 
-.username-editor__form {
+.email-editor__form {
   margin-bottom: 24px;
 }
 
@@ -76,7 +76,7 @@
   line-height: 1.3;
 }
 
-.username-editor__actions {
+.email-editor__actions {
   display: flex;
   gap: 12px;
   margin-top: 24px;
@@ -149,21 +149,21 @@
   border: 1px solid #f5c6cb;
 }
 
-.username-editor__info {
+.email-editor__info {
   background-color: #f8f9fa;
   padding: 16px;
   border-radius: 6px;
   border-left: 4px solid #007bff;
 }
 
-.username-editor__info h4 {
+.email-editor__info h4 {
   margin: 0 0 12px 0;
   color: #333;
   font-size: 1rem;
   font-weight: 600;
 }
 
-.username-editor__info ul {
+.email-editor__info ul {
   margin: 0;
   padding-left: 20px;
   color: #666;
@@ -171,17 +171,17 @@
   line-height: 1.5;
 }
 
-.username-editor__info li {
+.email-editor__info li {
   margin-bottom: 4px;
 }
 
 /* Responsive design */
 @media (max-width: 768px) {
-  .username-editor {
+  .email-editor {
     padding: 16px;
   }
   
-  .username-editor__actions {
+  .email-editor__actions {
     flex-direction: column;
   }
   
