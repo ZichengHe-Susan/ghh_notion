@@ -21,7 +21,7 @@ const EditProfile = () => {
 
   const tabs = [
     { id: 'profile', label: 'Profile Info', component: ProfileInfoEditor },
-    { id: 'username', label: 'Display Name', component: UsernameEditor },
+    { id: 'username', label: 'Email Address', component: UsernameEditor },
     { id: 'addresses', label: 'Address Book', component: AddressBookEditor }
   ];
 
@@ -32,7 +32,7 @@ const EditProfile = () => {
       <div className="edit-profile__header">
         <h1>Edit Profile</h1>
         <p className="edit-profile__description">
-          Manage your account information, display name, and addresses
+          Manage your account information, email address, and addresses
         </p>
       </div>
 

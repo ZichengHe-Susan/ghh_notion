@@ -9,7 +9,6 @@ const ProfileInfoEditor = () => {
     firstName: '',
     lastName: '',
     displayName: '',
-    email: '',
     phone: '',
     bio: '',
     location: '',
@@ -25,32 +24,13 @@ const ProfileInfoEditor = () => {
   const [message, setMessage] = useState({ type: '', text: '' });
   const [isEditing, setIsEditing] = useState(false);
 
-  // Debug logging
-  console.log('=== ProfileInfoEditor Render Debug ===');
-  console.log('Component rendered');
-  console.log('user from useAuth:', user);
-  console.log('user type:', typeof user);
-  console.log('user keys:', user ? Object.keys(user) : 'user is null/undefined');
-  console.log('formData:', formData);
-  console.log('isEditing:', isEditing);
 
   useEffect(() => {
-    console.log('=== useEffect Debug ===');
-    console.log('useEffect triggered');
-    console.log('user in useEffect:', user);
-    
     if (user) {
-      console.log('User exists, setting form data');
-      console.log('user.firstName:', user.firstName);
-      console.log('user.lastName:', user.lastName);
-      console.log('user.displayName:', user.displayName);
-      console.log('user.email:', user.email);
-      
       const newFormData = {
         firstName: user.firstName || '',
         lastName: user.lastName || '',
         displayName: user.displayName || '',
-        email: user.email || '',
         phone: user.profile?.phone || '',
         bio: user.profile?.bio || '',
         location: user.profile?.location || '',
@@ -63,10 +43,7 @@ const ProfileInfoEditor = () => {
         }
       };
       
-      console.log('New form data to be set:', newFormData);
       setFormData(newFormData);
-    } else {
-      console.log('User is null/undefined, not setting form data');
     }
   }, [user]);
 
@@ -102,8 +79,7 @@ const ProfileInfoEditor = () => {
       // Determine which API to call based on what's being updated
       const hasBasicInfoChanges = formData.firstName !== (user.firstName || '') || 
                                  formData.lastName !== (user.lastName || '') || 
-                                 formData.displayName !== (user.displayName || '') || 
-                                 formData.email !== (user.email || '');
+                                 formData.displayName !== (user.displayName || '');
 
       const hasProfileChanges = formData.phone !== (user.profile?.phone || '') || 
                                formData.bio !== (user.profile?.bio || '') || 
@@ -123,27 +99,12 @@ const ProfileInfoEditor = () => {
       let response;
 
       if (hasBasicInfoChanges) {
-        // Update basic user information (name, display name, email)
+        // Update basic user information (name, display name)
         const basicInfoData = {
           firstName: formData.firstName,
           lastName: formData.lastName,
           displayName: formData.displayName
         };
-
-        // Only include email if it's different and password if email is changing
-        if (formData.email !== user.email) {
-          const password = prompt('Please enter your password to change your email address:');
-          if (!password) {
-            setMessage({ 
-              type: 'error', 
-              text: 'Password is required to change email address' 
-            });
-            setLoading(false);
-            return;
-          }
-          basicInfoData.email = formData.email;
-          basicInfoData.password = password;
-        }
 
         response = await api.updateUserInfo(basicInfoData);
       } else {
@@ -163,7 +124,6 @@ const ProfileInfoEditor = () => {
           firstName: formData.firstName,
           lastName: formData.lastName,
           displayName: formData.displayName,
-          email: formData.email,
           profile: {
             ...user.profile,
             phone: formData.phone,
@@ -208,7 +168,6 @@ const ProfileInfoEditor = () => {
         firstName: user.firstName || '',
         lastName: user.lastName || '',
         displayName: user.displayName || '',
-        email: user.email || '',
         phone: user.profile?.phone || '',
         bio: user.profile?.bio || '',
         location: user.profile?.location || '',
@@ -296,14 +255,6 @@ const ProfileInfoEditor = () => {
             <label htmlFor="displayName" className="form-label">
               Display Name
             </label>
-            {/* Debug displayName input */}
-            {console.log('=== DisplayName Input Debug ===')}
-            {console.log('formData.displayName:', formData.displayName)}
-            {console.log('typeof formData.displayName:', typeof formData.displayName)}
-            {console.log('formData.displayName length:', formData.displayName?.length)}
-            {console.log('formData.displayName === "":', formData.displayName === '')}
-            {console.log('formData.displayName === null:', formData.displayName === null)}
-            {console.log('formData.displayName === undefined:', formData.displayName === undefined)}
             <input
               type="text"
               id="displayName"
@@ -320,25 +271,6 @@ const ProfileInfoEditor = () => {
             </div>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="email" className="form-label">
-              Email Address *
-            </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              disabled={!isEditing}
-              className="form-input"
-              placeholder="Enter your email address"
-              required
-            />
-            <div className="form-help">
-              Changing your email will require password verification and reset your email verification status.
-            </div>
-          </div>
         </div>
 
         <div className="form-section">
@@ -496,12 +428,11 @@ const ProfileInfoEditor = () => {
         <ul>
           <li><strong>First and Last Name:</strong> Required fields used for account identification</li>
           <li><strong>Display Name:</strong> Optional custom name shown to other users (defaults to first + last name)</li>
-          <li><strong>Email:</strong> Required for account access and notifications (password required to change)</li>
           <li><strong>Phone Number:</strong> Helps with order communication and delivery</li>
           <li><strong>Location:</strong> Helps other users find items nearby</li>
           <li><strong>Bio:</strong> Helps other users get to know you better</li>
           <li><strong>Notification Preferences:</strong> Control how you receive updates</li>
-          <li>All profile information can be updated anytime except email (requires password verification)</li>
+          <li>All profile information can be updated anytime</li>
         </ul>
       </div>
     </div>

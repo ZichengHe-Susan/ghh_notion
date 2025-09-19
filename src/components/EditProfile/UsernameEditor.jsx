@@ -6,9 +6,8 @@ import './styles/UsernameEditor.css';
 const UsernameEditor = () => {
   const { user, updateUser } = useAuth();
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: ''
+    email: '',
+    password: ''
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
@@ -17,9 +16,8 @@ const UsernameEditor = () => {
   useEffect(() => {
     if (user) {
       setFormData({
-        firstName: user.firstName || '',
-        lastName: user.lastName || '',
-        email: user.email || ''
+        email: user.email || '',
+        password: ''
       });
     }
   }, [user]);
@@ -38,35 +36,63 @@ const UsernameEditor = () => {
     setMessage({ type: '', text: '' });
 
     try {
-      const response = await api.updateProfile({
-        firstName: formData.firstName,
-        lastName: formData.lastName
+      // Check if email has changed
+      if (formData.email === user.email) {
+        setMessage({ 
+          type: 'error', 
+          text: 'No changes detected. Please enter a new email address.' 
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Validate password is provided
+      if (!formData.password) {
+        setMessage({ 
+          type: 'error', 
+          text: 'Password is required to change email address' 
+        });
+        setLoading(false);
+        return;
+      }
+
+      const response = await api.updateUserInfo({
+        email: formData.email,
+        password: formData.password
       });
 
       if (response.success) {
-        // Update the user context with new data
+        // Update the user context with new email
         updateUser({
           ...user,
-          firstName: formData.firstName,
-          lastName: formData.lastName
+          email: formData.email
         });
 
         setMessage({ 
           type: 'success', 
-          text: 'Display name updated successfully!' 
+          text: 'Email address updated successfully!' 
         });
         setIsEditing(false);
+        // Clear password field
+        setFormData(prev => ({ ...prev, password: '' }));
       } else {
+        let errorMessage = response.error || 'Failed to update email address';
+        
+        // If there are validation details, show them
+        if (response.details && Array.isArray(response.details)) {
+          errorMessage = response.details.map(detail => detail.msg || detail.message).join(', ');
+        }
+        
         setMessage({ 
           type: 'error', 
-          text: response.error || 'Failed to update display name' 
+          text: errorMessage
         });
       }
     } catch (error) {
-      console.error('Error updating display name:', error);
+      console.error('Error updating email:', error);
       setMessage({ 
         type: 'error', 
-        text: error.message || 'Failed to update display name' 
+        text: error.message || 'Failed to update email address' 
       });
     } finally {
       setLoading(false);
@@ -75,9 +101,8 @@ const UsernameEditor = () => {
 
   const handleCancel = () => {
     setFormData({
-      firstName: user.firstName || '',
-      lastName: user.lastName || '',
-      email: user.email || ''
+      email: user.email || '',
+      password: ''
     });
     setIsEditing(false);
     setMessage({ type: '', text: '' });
@@ -90,9 +115,9 @@ const UsernameEditor = () => {
   return (
     <div className="username-editor">
       <div className="username-editor__header">
-        <h3>Display Name & Email</h3>
+        <h3>Email Address</h3>
         <p className="username-editor__description">
-          Update your display name and view your email address
+          Update your email address for account access and notifications
         </p>
       </div>
 
@@ -104,56 +129,45 @@ const UsernameEditor = () => {
 
       <form onSubmit={handleSubmit} className="username-editor__form">
         <div className="form-group">
-          <label htmlFor="firstName" className="form-label">
-            First Name *
-          </label>
-          <input
-            type="text"
-            id="firstName"
-            name="firstName"
-            value={formData.firstName}
-            onChange={handleChange}
-            disabled={!isEditing}
-            className="form-input"
-            required
-            maxLength="50"
-          />
-        </div>
-
-        <div className="form-group">
-          <label htmlFor="lastName" className="form-label">
-            Last Name *
-          </label>
-          <input
-            type="text"
-            id="lastName"
-            name="lastName"
-            value={formData.lastName}
-            onChange={handleChange}
-            disabled={!isEditing}
-            className="form-input"
-            required
-            maxLength="50"
-          />
-        </div>
-
-        <div className="form-group">
           <label htmlFor="email" className="form-label">
-            Email Address
+            Email Address *
           </label>
           <input
             type="email"
             id="email"
             name="email"
             value={formData.email}
-            disabled
-            className="form-input form-input--disabled"
-            readOnly
+            onChange={handleChange}
+            disabled={!isEditing}
+            className="form-input"
+            placeholder="Enter your new email address"
+            required
           />
-          <p className="form-help">
-            Email address cannot be changed. Contact support if you need to update your email.
-          </p>
+          <div className="form-help">
+            Changing your email will require password verification and reset your email verification status.
+          </div>
         </div>
+
+        {isEditing && (
+          <div className="form-group">
+            <label htmlFor="password" className="form-label">
+              Current Password *
+            </label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              className="form-input"
+              placeholder="Enter your current password"
+              required
+            />
+            <div className="form-help">
+              Your password is required to verify your identity for email changes.
+            </div>
+          </div>
+        )}
 
         <div className="username-editor__actions">
           {!isEditing ? (
@@ -162,7 +176,7 @@ const UsernameEditor = () => {
               onClick={() => setIsEditing(true)}
               className="btn btn--primary"
             >
-              Edit Display Name
+              Change Email Address
             </button>
           ) : (
             <>
@@ -187,12 +201,12 @@ const UsernameEditor = () => {
       </form>
 
       <div className="username-editor__info">
-        <h4>Display Name Information</h4>
+        <h4>Email Address Information</h4>
         <ul>
-          <li>Your display name appears on your profile and in communications</li>
-          <li>First and last names are required fields</li>
-          <li>Email address is used for login and cannot be changed</li>
-          <li>Changes may take a few moments to appear across the platform</li>
+          <li>Your email address is used for login and account notifications</li>
+          <li>Changing your email requires password verification for security</li>
+          <li>Email verification will be required after changing your address</li>
+          <li>All notifications will be sent to your new email address</li>
         </ul>
       </div>
     </div>
