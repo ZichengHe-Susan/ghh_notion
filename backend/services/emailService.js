@@ -98,6 +98,51 @@ class EmailService {
     }
   }
 
+  // Send email change verification email
+  async sendEmailChangeVerificationEmail(user, verificationToken) {
+    const verificationUrl = `${config.FRONTEND_URL}/verify-email-change?token=${verificationToken}`;
+    
+    const mailOptions = {
+      from: config.EMAIL_FROM,
+      to: user.email,
+      subject: 'Verify Your New Email Address - Charlottesville Thrift Store Marketplace',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #333;">Email Change Verification</h2>
+          <p>Hi ${user.firstName},</p>
+          <p>You have requested to change your email address to <strong>${user.email}</strong>. To complete this change, please verify your new email address by clicking the button below.</p>
+          <div style="background-color: #fff3cd; padding: 20px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #ffc107;">
+            <p style="margin: 0;"><strong>Important:</strong> Your current email address will remain active until you verify this new address. You can continue using your account normally during this process.</p>
+          </div>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${verificationUrl}" 
+               style="background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+              Verify New Email Address
+            </a>
+          </div>
+          <p>If the button doesn't work, you can copy and paste this link into your browser:</p>
+          <p style="word-break: break-all; color: #666;">${verificationUrl}</p>
+          <p>This link will expire in 24 hours.</p>
+          <p><strong>If you didn't request this email change, please ignore this email and contact our support team immediately.</strong></p>
+          <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+          <p style="color: #666; font-size: 12px;">
+            Charlottesville Thrift Store Marketplace<br>
+            This is an automated message, please do not reply.
+          </p>
+        </div>
+      `
+    };
+
+    try {
+      await this.transporter.sendMail(mailOptions);
+      console.log(`Email change verification email sent to ${user.email}`);
+      return true;
+    } catch (error) {
+      console.error('Error sending email change verification email:', error);
+      throw new Error('Failed to send email change verification email');
+    }
+  }
+
   // Send welcome email after verification
   async sendWelcomeEmail(user) {
     const mailOptions = {

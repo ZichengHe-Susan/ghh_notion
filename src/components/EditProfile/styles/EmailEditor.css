@@ -175,6 +175,47 @@
   margin-bottom: 4px;
 }
 
+/* Pending email styles */
+.email-editor__pending {
+  margin-bottom: 24px;
+}
+
+.pending-email-notice {
+  background-color: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 6px;
+  padding: 16px;
+  border-left: 4px solid #ffc107;
+}
+
+.pending-email-notice h4 {
+  margin: 0 0 8px 0;
+  color: #856404;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.pending-email-notice p {
+  margin: 0 0 8px 0;
+  color: #856404;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.pending-email-notice p:last-of-type {
+  margin-bottom: 12px;
+}
+
+.pending-email-actions {
+  margin-top: 12px;
+}
+
+.btn--small {
+  padding: 8px 16px;
+  font-size: 0.8rem;
+  min-width: auto;
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   .email-editor {

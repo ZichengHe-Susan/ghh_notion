@@ -192,8 +192,13 @@ const userController = {
           });
         }
 
-        // Check if email already exists
-        const existingUser = await User.findOne({ email: email.toLowerCase() });
+        // Check if email already exists (either as current email or pending email)
+        const existingUser = await User.findOne({ 
+          $or: [
+            { email: email.toLowerCase() },
+            { pendingEmail: email.toLowerCase() }
+          ]
+        });
         if (existingUser && existingUser._id.toString() !== user._id.toString()) {
           return res.status(400).json({
             success: false,
@@ -201,8 +206,22 @@ const userController = {
           });
         }
 
-        user.email = email.toLowerCase();
-        user.isEmailVerified = false; // Reset email verification status
+        // Store the new email as pending instead of changing immediately
+        user.pendingEmail = email.toLowerCase();
+        
+        // Generate new email verification token for the pending email
+        const { generateEmailVerificationToken, hashToken } = require('../utils/jwt');
+        const verificationToken = generateEmailVerificationToken();
+        user.emailVerificationToken = hashToken(verificationToken);
+        
+        // Send verification email to the pending email address
+        const userWithPendingEmail = { ...user.toObject(), email: user.pendingEmail };
+        try {
+          await emailService.sendEmailChangeVerificationEmail(userWithPendingEmail, verificationToken);
+        } catch (emailError) {
+          console.error('Failed to send email change verification email:', emailError);
+          // Don't fail the request if email sending fails, but log it
+        }
       }
 
       // Update other fields
@@ -221,9 +240,15 @@ const userController = {
         priority: 'normal'
       });
 
+      // Determine the appropriate message based on whether email was changed
+      const emailChanged = email && email !== req.user.email;
+      const message = emailChanged 
+        ? 'Email change request submitted successfully. Please check your new email for verification instructions. Your current email will remain active until verification is complete.'
+        : 'User information updated successfully';
+
       res.json({
         success: true,
-        message: 'User information updated successfully',
+        message: message,
         data: {
           user: {
             _id: user._id,
@@ -231,6 +256,7 @@ const userController = {
             lastName: user.lastName,
             displayName: user.displayName,
             email: user.email,
+            pendingEmail: user.pendingEmail,
             avatar: user.avatar,
             role: user.role,
             isEmailVerified: user.isEmailVerified,

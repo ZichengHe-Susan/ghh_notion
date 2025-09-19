@@ -52,6 +52,11 @@ router.post('/reset-password', validateResetPassword, authController.resetPasswo
 // @access  Public
 router.get('/verify-email/:token', validateEmailVerification, authController.verifyEmail);
 
+// @route   GET /api/auth/verify-email-change/:token
+// @desc    Verify email change
+// @access  Public
+router.get('/verify-email-change/:token', validateEmailVerification, authController.verifyEmailChange);
+
 // @route   POST /api/auth/resend-verification
 // @desc    Resend email verification
 // @access  Public

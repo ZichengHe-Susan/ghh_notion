@@ -62,15 +62,15 @@ const EmailEditor = () => {
       });
 
       if (response.success) {
-        // Update the user context with new email
+        // Update the user context with pending email
         updateUser({
           ...user,
-          email: formData.email
+          pendingEmail: formData.email
         });
 
         setMessage({ 
           type: 'success', 
-          text: 'Email address updated successfully!' 
+          text: response.message || 'Email address updated successfully! Please check your new email for verification instructions.' 
         });
         setIsEditing(false);
         // Clear password field
@@ -127,6 +127,29 @@ const EmailEditor = () => {
         </div>
       )}
 
+      {user.pendingEmail && (
+        <div className="email-editor__pending">
+          <div className="pending-email-notice">
+            <h4>📧 Email Change Pending</h4>
+            <p>You have a pending email change to <strong>{user.pendingEmail}</strong></p>
+            <p>Please check your new email inbox for verification instructions. Your current email ({user.email}) will remain active until verification is complete.</p>
+            <div className="pending-email-actions">
+              <button
+                type="button"
+                onClick={() => {
+                  // Option to resend verification email
+                  // This would require a new API endpoint
+                  console.log('Resend verification email');
+                }}
+                className="btn btn--secondary btn--small"
+              >
+                Resend Verification Email
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="email-editor__form">
         <div className="form-group">
           <label htmlFor="email" className="form-label">
@@ -144,7 +167,7 @@ const EmailEditor = () => {
             required
           />
           <div className="form-help">
-            Changing your email will require password verification and reset your email verification status.
+            Changing your email will require password verification and reset your email verification status. A verification email will be sent to your new address.
           </div>
         </div>
 
@@ -175,8 +198,9 @@ const EmailEditor = () => {
               type="button"
               onClick={() => setIsEditing(true)}
               className="btn btn--primary"
+              disabled={!!user.pendingEmail}
             >
-              Change Email Address
+              {user.pendingEmail ? 'Email Change Pending' : 'Change Email Address'}
             </button>
           ) : (
             <>
@@ -205,8 +229,10 @@ const EmailEditor = () => {
         <ul>
           <li>Your email address is used for login and account notifications</li>
           <li>Changing your email requires password verification for security</li>
-          <li>Email verification will be required after changing your address</li>
-          <li>All notifications will be sent to your new email address</li>
+          <li>Your current email remains active until the new email is verified</li>
+          <li>A verification email will be sent to your new address automatically</li>
+          <li>You can only have one pending email change at a time</li>
+          <li>All notifications will be sent to your new email address after verification</li>
         </ul>
       </div>
     </div>

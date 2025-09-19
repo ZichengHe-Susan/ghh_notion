@@ -3,6 +3,7 @@ const { generateTokenPair, hashToken, generateEmailVerificationToken, generatePa
 const emailService = require('../services/emailService');
 const { validationResult } = require('express-validator');
 const { secureLog } = require('../utils/secureLogger');
+const config = require('../config/config');
 
 const authController = {
   register: async (req, res) => {
@@ -435,6 +436,117 @@ const authController = {
       res.status(500).json({
         success: false,
         error: 'Failed to resend verification email'
+      });
+    }
+  },
+
+  verifyEmailChange: async (req, res) => {
+    try {
+      const { token } = req.params;
+      
+      console.log('Email change verification request received:', {
+        token: token ? `${token.substring(0, 10)}...` : 'null',
+        timestamp: new Date().toISOString(),
+        userAgent: req.get('User-Agent'),
+        ip: req.ip
+      });
+
+      const hashedToken = hashToken(token);
+      
+      // Find user with this verification token
+      const user = await User.findOne({
+        emailVerificationToken: hashedToken
+      }).select('+emailVerificationToken');
+
+      console.log('User lookup result:', {
+        userFound: !!user,
+        userId: user?._id,
+        hasPendingEmail: !!user?.pendingEmail,
+        timestamp: new Date().toISOString()
+      });
+
+      if (!user) {
+        console.log('No user found with verification token, returning error');
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid or expired verification token'
+        });
+      }
+
+      if (!user.pendingEmail) {
+        console.log('User has no pending email, treating as regular email verification');
+        // This is a regular email verification, not an email change
+        if (user.isEmailVerified) {
+          return res.json({
+            success: true,
+            message: 'Email already verified. Please log in to continue.',
+            alreadyVerified: true
+          });
+        }
+
+        user.isEmailVerified = true;
+        user.emailVerificationToken = undefined;
+        await user.save();
+
+        try {
+          await emailService.sendWelcomeEmail(user);
+        } catch (emailError) {
+          console.error('Failed to send welcome email:', emailError);
+        }
+
+        return res.json({
+          success: true,
+          message: 'Email verified successfully'
+        });
+      }
+
+      // This is an email change verification
+      console.log('Processing email change verification for user:', user._id);
+      
+      // Check if the pending email is still available
+      const existingUser = await User.findOne({ 
+        email: user.pendingEmail,
+        _id: { $ne: user._id }
+      });
+      
+      if (existingUser) {
+        console.log('Pending email is no longer available');
+        return res.status(400).json({
+          success: false,
+          error: 'The requested email address is no longer available. Please try changing your email again.'
+        });
+      }
+
+      // Complete the email change
+      const oldEmail = user.email;
+      user.email = user.pendingEmail;
+      user.pendingEmail = undefined;
+      user.isEmailVerified = true;
+      user.emailVerificationToken = undefined;
+      await user.save();
+
+      console.log('Email change completed successfully for user:', user._id);
+
+      try {
+        await emailService.sendNotificationEmail(
+          user,
+          'Email Address Changed Successfully',
+          `Your email address has been successfully changed from ${oldEmail} to ${user.email}. You can now use your new email address to log in.`,
+          `${config.FRONTEND_URL}/profile`
+        );
+      } catch (emailError) {
+        console.error('Failed to send email change confirmation:', emailError);
+      }
+
+      res.json({
+        success: true,
+        message: 'Email address changed successfully! You can now use your new email address to log in.'
+      });
+    } catch (error) {
+      console.error('Email change verification error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Email change verification failed'
       });
     }
   },

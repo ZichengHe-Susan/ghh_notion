@@ -29,12 +29,6 @@ const EditProfile = () => {
 
   return (
     <div className="edit-profile">
-      <div className="edit-profile__header">
-        <h1>Edit Profile</h1>
-        <p className="edit-profile__description">
-          Manage your account information, email address, and addresses
-        </p>
-      </div>
 
       <div className="edit-profile__content">
         <div className="edit-profile__sidebar">

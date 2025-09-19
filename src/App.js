@@ -13,6 +13,7 @@ import Checkout from './pages/Checkout';
 import ChatInterface from './components/ChatInterface';
 import ChatButton from './components/ChatButton';
 import EmailVerification from './pages/EmailVerification';
+import EmailChangeVerification from './pages/EmailChangeVerification';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -32,6 +33,7 @@ function App() {
               <Route path="/item/:id" element={<ProtectedRoute><ItemDetails /></ProtectedRoute>} />
               <Route path="/checkedOut" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
               <Route path="/verify-email" element={<EmailVerification />} />
+              <Route path="/verify-email-change" element={<EmailChangeVerification />} />
             </Routes>
             
             {/* Chat Interface */}
