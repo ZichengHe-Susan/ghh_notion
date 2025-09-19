@@ -196,14 +196,20 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
+  const updateUser = (updatedUserData) => {
+    setUserData(prev => ({ ...prev, ...updatedUserData }));
+  };
+
   const value = {
     currentUser, 
+    user: userData, // Add user alias for easier access
     userData,
     isEmailVerified,
     login,
     register,
     logout,
     updateProfile,
+    updateUser, // Add updateUser method
     resendVerification,
     validateToken,
     loading
