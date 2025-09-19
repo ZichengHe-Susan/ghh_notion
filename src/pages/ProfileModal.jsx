@@ -113,7 +113,6 @@ const ProfileModal = ({ showProfile, handleClose }) => {
           <div className="modal-description-wrapper">
             <div className="modal-description">Joined</div>
             <div className="modal-data">{calculateJoinedDuration(userData.createdAt)}</div>
-            
           </div>
           <div className="modal-description-wrapper">
             <div className="modal-description">
@@ -125,9 +124,8 @@ const ProfileModal = ({ showProfile, handleClose }) => {
             <div className="modal-description">
                 treasures
             </div>
-        </div>
-
-        <div className="modal-description-wrapper">
+          </div>
+          <div className="modal-description-wrapper">
             <div className="modal-description">
                 Revived 
             </div>
@@ -137,23 +135,25 @@ const ProfileModal = ({ showProfile, handleClose }) => {
             <div className="modal-description">
             past pieces
             </div>
-        </div>
+          </div>
 
           <Button className="close-button" onClick={handleClose}>
             <CloseIcon />
           </Button>
         </div>
 
-        <Box sx={{ borderBottom: 1, borderColor: 'divider' }} className="tabs-container">
-        <Tabs value={activeTab} onChange={handleTabChange}>
-          <Tab label="Listed Items" />
-          <Tab label="Order History" />
-          <Tab label="Edit Profile" />
-        </Tabs>
-      </Box>
+        {/* Sticky Tabs Container */}
+        <div className="modal-sticky-tabs">
+          <Box sx={{ borderBottom: 1, borderColor: 'divider' }} className="tabs-container">
+            <Tabs value={activeTab} onChange={handleTabChange}>
+              <Tab label="Listed Items" />
+              <Tab label="Order History" />
+              <Tab label="Edit Profile" />
+            </Tabs>
+          </Box>
+        </div>
 
-
-        {/* Render the content based on the selected tab */}
+        {/* Tab Content */}
         <div className="tab-content">
           {activeTab === 0 && <ListedItems userItems={userItems} />}
           {activeTab === 1 && <OrderHistory />}
