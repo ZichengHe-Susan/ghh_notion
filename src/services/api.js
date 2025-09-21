@@ -372,6 +372,12 @@ class ApiService {
     });
   }
 
+  async revertEmailChange() {
+    return this.request('/users/revert-email-change', {
+      method: 'POST',
+    });
+  }
+
   async getUserProfile(userId) {
     return this.request(`/users/${userId}`);
   }

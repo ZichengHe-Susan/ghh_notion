@@ -137,6 +137,41 @@ const EmailEditor = () => {
     }
   };
 
+  const handleRevertEmailChange = async () => {
+    setLoading(true);
+    setMessage({ type: '', text: '' });
+
+    try {
+      const response = await api.revertEmailChange();
+
+      if (response.success) {
+        // Update the user context to remove pendingEmail
+        updateUser({
+          ...user,
+          pendingEmail: undefined
+        });
+
+        setMessage({ 
+          type: 'success', 
+          text: response.message || 'Email change request has been cancelled. You can now submit a new email change request.' 
+        });
+      } else {
+        setMessage({ 
+          type: 'error', 
+          text: response.error || 'Failed to cancel email change request' 
+        });
+      }
+    } catch (error) {
+      console.error('Error reverting email change:', error);
+      setMessage({ 
+        type: 'error', 
+        text: error.message || 'Failed to cancel email change request' 
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (!user) {
     return <div className="email-editor">Loading...</div>;
   }
@@ -170,6 +205,14 @@ const EmailEditor = () => {
                 className="btn btn--secondary btn--small"
               >
                 {loading ? 'Sending...' : 'Resend Verification Email'}
+              </button>
+              <button
+                type="button"
+                onClick={handleRevertEmailChange}
+                disabled={loading}
+                className="btn btn--danger btn--small"
+              >
+                {loading ? 'Reverting...' : 'Cancel Email Change'}
               </button>
             </div>
           </div>

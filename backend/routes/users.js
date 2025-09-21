@@ -69,4 +69,9 @@ router.get('/verification', auth, userController.getVerificationStatus);
 // @access  Private
 router.post('/resend-email-change-verification', auth, userController.resendEmailChangeVerification);
 
+// @route   POST /api/users/revert-email-change
+// @desc    Cancel pending email change request
+// @access  Private
+router.post('/revert-email-change', auth, userController.revertEmailChange);
+
 module.exports = router;

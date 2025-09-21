@@ -745,6 +745,55 @@ const userController = {
         error: 'Failed to resend verification email'
       });
     }
+  },
+
+  revertEmailChange: async (req, res) => {
+    try {
+      const user = await User.findById(req.user._id);
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          error: 'User not found'
+        });
+      }
+
+      if (!user.pendingEmail) {
+        return res.status(400).json({
+          success: false,
+          error: 'No pending email change found to revert'
+        });
+      }
+
+      // Clear the pending email and verification token
+      user.pendingEmail = undefined;
+      user.emailVerificationToken = undefined;
+      await user.save();
+
+      res.json({
+        success: true,
+        message: 'Email change request has been cancelled. You can now submit a new email change request.',
+        data: {
+          user: {
+            _id: user._id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            displayName: user.displayName,
+            email: user.email,
+            pendingEmail: user.pendingEmail,
+            avatar: user.avatar,
+            role: user.role,
+            isEmailVerified: user.isEmailVerified,
+            verification: user.verification
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Revert email change error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to revert email change'
+      });
+    }
   }
 };
 
