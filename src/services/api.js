@@ -530,6 +530,24 @@ class ApiService {
       method: 'PUT',
     });
   }
+
+  // Payment methods
+  async getPaymentMethods() {
+    return this.request('/payments/methods');
+  }
+
+  async addPaymentMethod(paymentMethodData) {
+    return this.request('/payments/methods', {
+      method: 'POST',
+      body: JSON.stringify(paymentMethodData),
+    });
+  }
+
+  async removePaymentMethod(paymentMethodId) {
+    return this.request(`/payments/methods/${paymentMethodId}`, {
+      method: 'DELETE',
+    });
+  }
 }
 
 // Create and export a singleton instance

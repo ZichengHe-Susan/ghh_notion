@@ -389,3 +389,81 @@ body, h1, p {
     color: #6c757d;
     cursor: not-allowed;
   }
+
+  /* Payment Methods Section Styles */
+  .payment-methods-section {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-top: 3px solid #3498db;
+  }
+
+  .payment-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 20px;
+  }
+
+  .proceed-payment-btn {
+    flex: 1;
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #27ae60, #2ecc71);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .proceed-payment-btn:hover {
+    background: linear-gradient(135deg, #229954, #27ae60);
+    transform: translateY(-1px);
+  }
+
+  .cancel-payment-btn {
+    flex: 1;
+    padding: 12px 24px;
+    background: white;
+    color: #e74c3c;
+    border: 2px solid #e74c3c;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .cancel-payment-btn:hover {
+    background: #e74c3c;
+    color: white;
+  }
+
+  /* Stripe Payment Section Styles */
+  .stripe-payment-section {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    margin-top: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-top: 3px solid #9b59b6;
+  }
+
+  .back-to-methods-btn {
+    width: 100%;
+    padding: 10px;
+    background: #f8f9fa;
+    color: #6c757d;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 15px;
+    transition: all 0.3s ease;
+  }
+
+  .back-to-methods-btn:hover {
+    background: #e9ecef;
+    border-color: #adb5bd;
+  }

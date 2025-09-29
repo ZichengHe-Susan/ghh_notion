@@ -6,6 +6,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 import apiService from '../services/api';
 import AddressModal from '../components/AddressModal';
+import StripePaymentForm from '../components/StripePaymentForm';
+import PaymentMethodManager from '../components/PaymentMethodManager';
 
 const ShoppingCart = () => {
     const navigate = useNavigate();
@@ -20,6 +22,12 @@ const ShoppingCart = () => {
     // Address modal state
     const [showAddressModal, setShowAddressModal] = useState(false);
     const [selectedAddress, setSelectedAddress] = useState(null);
+    
+    // Stripe payment state
+    const [showPaymentForm, setShowPaymentForm] = useState(false);
+    const [paymentProcessing, setPaymentProcessing] = useState(false);
+    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
+    const [showPaymentMethods, setShowPaymentMethods] = useState(false);
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -78,42 +86,66 @@ const ShoppingCart = () => {
                 return;
             }
             
-            // Transform cart items to match backend expectations
-            const transformedItems = cartItems.map(item => ({
-                itemId: item._id || item.id,
-                quantity: item.quantity
-            }));
-
-            const orderData = {
-                items: transformedItems,
-                shippingAddress: selectedAddress.address,
-                shippingMethod: 'standard',
-                paymentMethod: 'stripe',
-                notes: ''
-            };
-
-            const result = await apiService.createOrder(orderData);
-            if (result.success) {
-                // Clear the cart after successful order
-                await clearCart();
-                
-                navigate('/checkedOut', {
-                    state: {
-                        orderNumber: result.data.orderNumber || result.data._id,
-                        items: cartItems,
-                        totalPrice: totalPrice,
-                        timestamp: new Date(),
-                        status: 'pending'
-                    }
-                });
-            } else {
-                alert(`Checkout failed: ${result.error}`);
-            }
+            // Show payment options
+            setShowPaymentMethods(true);
         } catch (error) {
             console.error('Error during checkout:', error);
             alert('Checkout failed. Please try again.');
         }
-    }
+    };
+
+    const handlePaymentSuccess = async (paymentResult) => {
+        try {
+            // Clear the cart after successful payment
+            await clearCart();
+            
+            // Navigate to confirmation page with payment result
+            navigate('/checkedOut', {
+                state: {
+                paymentResult,
+                orderData: paymentResult.orderData,
+                orderNumber: paymentResult.orderData.orderNumber,
+                items: cartItems,
+                totalPrice: totalPrice,
+                timestamp: new Date(),
+                status: 'confirmed'
+            }
+        });
+        } catch (error) {
+            console.error('Error after successful payment:', error);
+        }
+    };
+
+    const handlePaymentError = (error) => {
+        console.error('Payment error:', error);
+        alert(`Payment failed: ${error.message || 'Please try again.'}`);
+        setPaymentProcessing(false);
+    };
+
+    const handleProceedToPayment = () => {
+        setShowPaymentMethods(false);
+        setShowPaymentForm(true);
+        setPaymentProcessing(true);
+    };
+
+    const handlePaymentMethodSelect = (paymentMethod) => {
+        setSelectedPaymentMethod(paymentMethod);
+    };
+
+    const createOrderData = () => {
+        const transformedItems = cartItems.map(item => ({
+            itemId: item._id || item.id,
+            quantity: item.quantity
+        }));
+        
+        return {
+            items: transformedItems,
+            shippingAddressId: selectedAddress._id,
+            shippingMethod: 'standard',
+            paymentMethod: 'stripe',
+            notes: ''
+        };
+    };
     
     if (loading) {
         return (
@@ -195,8 +227,61 @@ const ShoppingCart = () => {
                     <p>Total</p>
                     <p>${totalPrice.toFixed(2)}</p>
                 </div>
-                <button className="checkout-button" onClick ={handleCheckout}>Checkout</button>
+                <button className="checkout-button" onClick={handleCheckout}>Proceed to Payment</button>
                 </div>
+                
+                {/* Payment Methods Section */}
+                {showPaymentMethods && (
+                    <div className="payment-methods-section">
+                        <PaymentMethodManager 
+                            onPaymentMethodSelect={handlePaymentMethodSelect}
+                            onPaymentMethodAdded={() => setShowPaymentForm(true)}
+                        />
+                        
+                        <div className="payment-actions">
+                            <button 
+                                onClick={handleProceedToPayment}
+                                className="proceed-payment-btn"
+                            >
+                                Continue with New Payment Method
+                            </button>
+                            
+                            <button 
+                                onClick={() => setShowPaymentMethods(false)}
+                                className="cancel-payment-btn"
+                            >
+                                Back to Cart
+                            </button>
+                        </div>
+                    </div>
+                )}
+                
+                {/* Stripe Payment Form */}
+                {showPaymentForm && (
+                    <div className="stripe-payment-section">
+                        <StripePaymentForm
+                            orderData={createOrderData()}
+                            totalAmount={totalPrice}
+                            onSuccess={handlePaymentSuccess}
+                            onError={handlePaymentError}
+                            billingDetails={{
+                                name: currentUser?.name || '',
+                                email: currentUser?.email || ''
+                            }}
+                            isLoading={paymentProcessing}
+                        />
+                        
+                        <button 
+                            onClick={() => {
+                                setShowPaymentForm(false);
+                                setShowPaymentMethods(true);
+                            }}
+                            className="back-to-methods-btn"
+                        >
+                            ← Back to Payment Methods
+                        </button>
+                    </div>
+                )}
         </div>
         <div className="cart-summary">
             

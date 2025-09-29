@@ -15,23 +15,26 @@ import ChatButton from './components/ChatButton';
 import EmailVerification from './pages/EmailVerification';
 import EmailChangeVerification from './pages/EmailChangeVerification';
 import ProtectedRoute from './components/ProtectedRoute';
+import StripeProvider from './components/StripeProvider';
+import OrderConfirmation from './components/OrderConfirmation';
 
 function App() {
   const [showChat, setShowChat] = useState(false);
 
   return (
     <Router>
-      <AuthProvider>
-        <CartProvider>
-          <SocketProvider>
-            <Routes>
+      <StripeProvider>
+        <AuthProvider>
+          <CartProvider>
+            <SocketProvider>
+              <Routes>
               <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
               <Route path="/login" element={<Login />} />
               <Route path="/upload" element={<ProtectedRoute><AddItem /></ProtectedRoute>} />
               <Route path="/items" element={<ProtectedRoute><ViewItems /></ProtectedRoute>} />
               <Route path="/cart" element={<ProtectedRoute><ShoppingCart /></ProtectedRoute>} />
               <Route path="/item/:id" element={<ProtectedRoute><ItemDetails /></ProtectedRoute>} />
-              <Route path="/checkedOut" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+              <Route path="/checkedOut" element={<ProtectedRoute><OrderConfirmation /></ProtectedRoute>} />
               <Route path="/verify-email" element={<EmailVerification />} />
               <Route path="/verify-email-change" element={<EmailChangeVerification />} />
             </Routes>
@@ -43,9 +46,10 @@ function App() {
             
             {/* Chat Button */}
             <ChatButton onClick={() => setShowChat(true)} />
-          </SocketProvider>
-        </CartProvider>
-      </AuthProvider>
+            </SocketProvider>
+          </CartProvider>
+        </AuthProvider>
+      </StripeProvider>
     </Router>
   );
 }

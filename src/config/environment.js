@@ -4,6 +4,9 @@ const config = {
   SOCKET_URL: process.env.REACT_APP_SOCKET_URL || 'http://localhost:5000',
   NODE_ENV: process.env.REACT_APP_NODE_ENV || 'development',
   
+  // Stripe Configuration
+  STRIPE_PUBLISHABLE_KEY: process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || 'pk_test_51PFgYhQA5t6K7cQa4xMxLpJ4mM7W9nR3Q1F2H4G6B8N5S7U9W2Y4Z6A8B1C3D5',
+  
   // Feature flags
   ENABLE_CHAT: true,
   ENABLE_REVIEWS: true,
