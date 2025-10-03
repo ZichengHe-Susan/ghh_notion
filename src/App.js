@@ -20,6 +20,7 @@ import OrderConfirmation from './components/OrderConfirmation';
 import StripeOnboarding from './components/StripeOnboarding';
 import OnboardingSuccess from './pages/OnboardingSuccess';
 import OnboardingRefresh from './pages/OnboardingRefresh';
+import OrderDetails from './pages/OrderDetails';
 
 function App() {
   const [showChat, setShowChat] = useState(false);
@@ -43,6 +44,7 @@ function App() {
               <Route path="/seller/onboarding" element={<ProtectedRoute><StripeOnboarding /></ProtectedRoute>} />
               <Route path="/seller/onboarding/success" element={<ProtectedRoute><OnboardingSuccess /></ProtectedRoute>} />
               <Route path="/seller/onboarding/refresh" element={<ProtectedRoute><OnboardingRefresh /></ProtectedRoute>} />
+              <Route path="/order/:orderId" element={<ProtectedRoute><OrderDetails /></ProtectedRoute>} />
             </Routes>
             
             {/* Chat Interface */}

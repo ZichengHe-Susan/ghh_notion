@@ -1,0 +1,155 @@
+.order-details-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.order-details-container .MuiCard {
+  margin-bottom: 20px;
+}
+
+.order-details-container .MuiCardContent {
+  padding: 20px;
+}
+
+.order-details-container .MuiChip {
+  font-weight: 500;
+}
+
+.order-details-container .MuiButton {
+  margin-right: 10px;
+  margin-bottom: 10px;
+}
+
+.order-details-container .MuiAlert {
+  margin-top: 16px;
+}
+
+.order-details-container .MuiDialogContent {
+  padding: 20px 24px;
+}
+
+.order-details-container .MuiDialogActions {
+  padding: 16px 24px;
+}
+
+.order-details-container textarea {
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.order-details-container textarea:focus {
+  outline: none;
+  border-color: #1976d2;
+}
+
+/* Status specific styling */
+.order-details-container .status-pending {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.order-details-container .status-confirmed {
+  background-color: #d1ecf1;
+  color: #0c5460;
+}
+
+.order-details-container .status-paid {
+  background-color: #cce5ff;
+  color: #004085;
+}
+
+.order-details-container .status-shipped {
+  background-color: #e2e3e5;
+  color: #383d41;
+}
+
+.order-details-container .status-delivered {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.order-details-container .status-completed {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.order-details-container .status-cancelled {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.order-details-container .status-disputed {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .order-details-container {
+    padding: 10px;
+  }
+  
+  .order-details-container .MuiCardContent {
+    padding: 16px;
+  }
+  
+  .order-details-container .MuiButton {
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: 10px;
+  }
+}
+
+/* Loading states */
+.order-details-container .MuiCircularProgress {
+  margin: 0 8px;
+}
+
+/* Dialog styling */
+.order-details-container .MuiDialog-paper {
+  max-width: 500px;
+}
+
+.order-details-container .MuiDialogTitle {
+  padding: 20px 24px 16px;
+}
+
+/* Action buttons container */
+.order-details-container .action-buttons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+
+/* Escrow status indicator */
+.escrow-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.escrow-status.held {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.escrow-status.released {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.escrow-status.disputed {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.escrow-status.refunded {
+  background-color: #f8d7da;
+  color: #721c24;
+}

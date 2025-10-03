@@ -408,10 +408,27 @@ class ApiService {
     return this.request(`/orders/${orderId}`);
   }
 
-  async updateOrderStatus(orderId, status) {
+  async updateOrderStatus(orderId, status, additionalData = {}) {
     return this.request(`/orders/${orderId}/status`, {
       method: 'PUT',
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({ status, ...additionalData }),
+    });
+  }
+
+  async cancelOrder(orderId, reason = '') {
+    return this.request(`/orders/${orderId}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ 
+        status: 'cancelled',
+        reason: reason
+      }),
+    });
+  }
+
+  async confirmOrder(orderId) {
+    return this.request(`/orders/${orderId}/status`, {
+      method: 'PUT',
+      body: JSON.stringify({ status: 'completed' }),
     });
   }
 

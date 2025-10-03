@@ -167,27 +167,63 @@
 
   }
   .order-history {
-    padding: 30px 80px;
+    padding: 20px;
     
+    .order-card {
+      transition: all 0.3s ease;
+      border-radius: 12px;
+      
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+      
+      .MuiCardContent-root {
+        padding: 20px;
+      }
+      
+      .order-id {
+        font-weight: 600;
+        color: #1976d2;
+      }
+
+      .order-total {
+        font-size: 1.1rem;
+        font-weight: 500;
+        color: #2e7d32;
+      }
+      
+      .MuiChip-root {
+        font-weight: 500;
+      }
+      
+      .MuiButton-root {
+        margin-top: 8px;
+        text-transform: none;
+        font-weight: 500;
+      }
+    }
+    
+    // Legacy order styles (keeping for backward compatibility)
     .order {
       padding-left: 30px;
-      padding-right:30px;
-        display: flex;
-        flex-direction: column;
-        padding: 15px;
-        margin-bottom: 20px; /* Add space between each order */
-        border: 1px solid #ccc; /* Light border around each order */
-        border-radius: 10px; /* Rounded corners for each order */
-        background-color: #f9f9f9; /* Slightly different background color to highlight the order */
-        
-        .order-id {
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
+      padding-right: 30px;
+      display: flex;
+      flex-direction: column;
+      padding: 15px;
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      background-color: #f9f9f9;
+      
+      .order-id {
+        font-weight: bold;
+        margin-bottom: 10px;
+      }
 
-        .order-total, .order-status {
-            font-size: 1rem;
-            margin-bottom: 5px;
-        }
+      .order-total, .order-status {
+        font-size: 1rem;
+        margin-bottom: 5px;
+      }
     }
-}
+  }
