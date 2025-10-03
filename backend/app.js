@@ -28,6 +28,7 @@ const notificationRoutes = require('./routes/notifications');
 const cartRoutes = require('./routes/cart');
 const addressRoutes = require('./routes/addresses');
 const stripeWebhookRoutes = require('./routes/stripeWebhook');
+const stripeConnectRoutes = require('./routes/stripeConnect');
 
 // Import services
 const orderLifecycleService = require('./services/orderLifecycleService');
@@ -48,9 +49,11 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:", "https:"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://js.stripe.com"],
+      scriptSrc: ["'self'", "https://js.stripe.com", "https://connect.stripe.com"],
+      imgSrc: ["'self'", "data:", "https:", "https://js.stripe.com"],
+      frameSrc: ["'self'", "https://js.stripe.com", "https://connect.stripe.com", "https://hooks.stripe.com"],
+      connectSrc: ["'self'", "https://api.stripe.com", "https://connect.stripe.com"],
     },
   },
 }));
@@ -89,6 +92,10 @@ if (config.NODE_ENV === 'production') {
     },
     standardHeaders: true,
     legacyHeaders: false,
+    // Skip rate limiting for Stripe Connect routes
+    skip: (req) => {
+      return req.path.startsWith('/api/stripe-connect/');
+    }
   });
 
   app.use('/api/', limiter);
@@ -117,6 +124,7 @@ app.use('/api/upload', uploadRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/addresses', addressRoutes);
+app.use('/api/stripe-connect', stripeConnectRoutes);
 
 // Serve static files (for uploaded images)
 app.use('/uploads', express.static('uploads'));

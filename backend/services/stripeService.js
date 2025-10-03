@@ -638,6 +638,160 @@ class StripeService {
       throw new Error(`Failed to get payment stats: ${error.message}`);
     }
   }
+
+  /**
+   * Create a Stripe Connect account for seller onboarding
+   * @param {Object} user - User object
+   * @param {Object} accountData - Account data for onboarding
+   * @returns {Promise<Object>} Connect account and onboarding URL
+   */
+  async createConnectAccount(user, accountData = {}) {
+    try {
+      const accountParams = {
+        type: 'express',
+        country: accountData.country || 'US',
+        email: user.email,
+        capabilities: {
+          card_payments: { requested: true },
+          transfers: { requested: true }
+        },
+        business_type: accountData.businessType || 'individual',
+        individual: {
+          email: user.email,
+          first_name: user.firstName,
+          last_name: user.lastName,
+          // Don't include phone number - let Stripe collect it during onboarding
+          address: accountData.address || {}
+        },
+        settings: {
+          payouts: {
+            schedule: {
+              interval: 'daily'
+            }
+          }
+        }
+      };
+
+      const account = await this.stripe.accounts.create(accountParams);
+      
+      // Create account link for onboarding
+      const accountLink = await this.stripe.accountLinks.create({
+        account: account.id,
+        refresh_url: `${config.FRONTEND_URL}/seller/onboarding/refresh`,
+        return_url: `${config.FRONTEND_URL}/seller/onboarding/success`,
+        type: 'account_onboarding'
+      });
+
+      return {
+        accountId: account.id,
+        onboardingUrl: accountLink.url,
+        account: account
+      };
+
+    } catch (error) {
+      logger.error('Error creating Connect account:', error);
+      
+      // Handle specific Stripe Connect errors
+      if (error.message.includes('You can only create new accounts if you\'ve signed up for Connect')) {
+        throw new Error('Stripe Connect is not enabled for this account. Please enable Stripe Connect in your Stripe Dashboard or use test mode keys.');
+      }
+      
+      if (error.message.includes('Invalid API Key')) {
+        throw new Error('Invalid Stripe API key. Please check your STRIPE_SECRET_KEY configuration.');
+      }
+      
+      if (error.message.includes('test mode')) {
+        throw new Error('Stripe Connect requires test mode keys for development. Please use sk_test_ keys.');
+      }
+      
+      if (error.message.includes('not a valid phone number')) {
+        throw new Error('Please provide a valid phone number in the format +1234567890.');
+      }
+      
+      // Handle rate limiting errors
+      if (error.code === 'rate_limit') {
+        throw new Error('Rate limit exceeded. Please wait a moment and try again.');
+      }
+      
+      // Handle network/connection errors
+      if (error.type === 'StripeConnectionError') {
+        throw new Error('Network error connecting to Stripe. Please check your internet connection and try again.');
+      }
+      
+      throw new Error(`Failed to create Connect account: ${error.message}`);
+    }
+  }
+
+  /**
+   * Get Connect account status and requirements
+   * @param {string} accountId - Stripe Connect account ID
+   * @returns {Promise<Object>} Account status and requirements
+   */
+  async getConnectAccountStatus(accountId) {
+    try {
+      const account = await this.stripe.accounts.retrieve(accountId);
+      
+      return {
+        accountId: account.id,
+        onboardingStatus: account.details_submitted ? 'complete' : 'incomplete',
+        chargesEnabled: account.charges_enabled,
+        payoutsEnabled: account.payouts_enabled,
+        detailsSubmitted: account.details_submitted,
+        requirements: {
+          currentlyDue: account.requirements?.currently_due || [],
+          eventuallyDue: account.requirements?.eventually_due || [],
+          pastDue: account.requirements?.past_due || [],
+          pendingVerification: account.requirements?.pending_verification || []
+        }
+      };
+
+    } catch (error) {
+      logger.error('Error getting Connect account status:', error);
+      throw new Error(`Failed to get Connect account status: ${error.message}`);
+    }
+  }
+
+  /**
+   * Create account link for existing Connect account
+   * @param {string} accountId - Stripe Connect account ID
+   * @param {string} type - Type of link ('account_onboarding' or 'account_update')
+   * @returns {Promise<Object>} Account link URL
+   */
+  async createAccountLink(accountId, type = 'account_onboarding') {
+    try {
+      const accountLink = await this.stripe.accountLinks.create({
+        account: accountId,
+        refresh_url: `${config.FRONTEND_URL}/seller/onboarding/refresh`,
+        return_url: `${config.FRONTEND_URL}/seller/onboarding/success`,
+        type: type
+      });
+
+      return {
+        url: accountLink.url
+      };
+
+    } catch (error) {
+      logger.error('Error creating account link:', error);
+      throw new Error(`Failed to create account link: ${error.message}`);
+    }
+  }
+
+  /**
+   * Update Connect account information
+   * @param {string} accountId - Stripe Connect account ID
+   * @param {Object} updateData - Data to update
+   * @returns {Promise<Object>} Updated account
+   */
+  async updateConnectAccount(accountId, updateData) {
+    try {
+      const account = await this.stripe.accounts.update(accountId, updateData);
+      return account;
+
+    } catch (error) {
+      logger.error('Error updating Connect account:', error);
+      throw new Error(`Failed to update Connect account: ${error.message}`);
+    }
+  }
 }
 
 module.exports = new StripeService();

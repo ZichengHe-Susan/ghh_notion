@@ -526,6 +526,29 @@ class ApiService {
       method: 'DELETE',
     });
   }
+
+  // Stripe Connect methods for seller onboarding
+  async createStripeConnectAccount(accountData) {
+    return this.request('/stripe-connect/create-account', {
+      method: 'POST',
+      body: JSON.stringify(accountData),
+    });
+  }
+
+  async getStripeConnectAccountStatus() {
+    return this.request('/stripe-connect/account-status');
+  }
+
+  async createStripeConnectLink(type = 'account_onboarding') {
+    return this.request('/stripe-connect/create-link', {
+      method: 'POST',
+      body: JSON.stringify({ type }),
+    });
+  }
+
+  async canSell() {
+    return this.request('/stripe-connect/can-sell');
+  }
 }
 
 // Create and export a singleton instance

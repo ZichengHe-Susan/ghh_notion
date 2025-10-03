@@ -18,6 +18,8 @@ const AddItem = () => {
   const [categories, setCategories] = useState([]);
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState(null);
+  const [canSell, setCanSell] = useState(false);
+  const [checkingSellStatus, setCheckingSellStatus] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -25,6 +27,26 @@ const AddItem = () => {
       navigate('/login');
     }
   }, [currentUser, navigate]);
+
+  // Check if user can sell
+  useEffect(() => {
+    const checkSellStatus = async () => {
+      if (!currentUser) return;
+      
+      try {
+        const response = await apiService.canSell();
+        if (response.success) {
+          setCanSell(response.data.canSell);
+        }
+      } catch (error) {
+        console.error('Error checking sell status:', error);
+      } finally {
+        setCheckingSellStatus(false);
+      }
+    };
+
+    checkSellStatus();
+  }, [currentUser]);
 
   // Fetch categories on component mount
   useEffect(() => {
@@ -115,6 +137,14 @@ const AddItem = () => {
     setIsSubmitted(true);
     setUploading(true);
 
+    // Check if user can sell
+    if (!canSell) {
+      alert("You must complete Stripe Connect onboarding before listing items for sale. Please set up your payment account first.");
+      setUploading(false);
+      navigate('/seller/onboarding');
+      return;
+    }
+
     // Validate form fields
     if (!itemTitle || !itemPrice || !itemDescription || !itemCategory || !itemImage) {
       alert("Please fill in all the required fields.");
@@ -158,6 +188,69 @@ const AddItem = () => {
       setUploading(false);
     }
   };
+
+  if (checkingSellStatus) {
+    return (
+      <div id="add-item-page">
+        <nav className="navbar">
+          <Link to="/" className="nav-link">Home</Link>
+        </nav>
+        <div className="add-item-container">
+          <h2 style={{ color: 'white' }}>Checking seller status...</h2>
+          <div style={{ textAlign: 'center', padding: '20px' }}>
+            <p style={{ color: 'white' }}>Please wait while we verify your seller account.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!canSell) {
+    return (
+      <div id="add-item-page">
+        <nav className="navbar">
+          <Link to="/" className="nav-link">Home</Link>
+        </nav>
+        <div className="add-item-container">
+          <h2 style={{ color: 'white' }}>Payment Account Required</h2>
+          <div style={{ textAlign: 'center', padding: '20px' }}>
+            <p style={{ color: 'white', marginBottom: '20px' }}>
+              To list items for sale, you must first set up a payment account with Stripe Connect.
+            </p>
+            <button 
+              onClick={() => navigate('/seller/onboarding')}
+              style={{
+                backgroundColor: '#28a745',
+                color: 'white',
+                border: 'none',
+                padding: '12px 24px',
+                borderRadius: '8px',
+                fontSize: '16px',
+                cursor: 'pointer',
+                marginRight: '10px'
+              }}
+            >
+              Set Up Payment Account
+            </button>
+            <button 
+              onClick={() => navigate('/')}
+              style={{
+                backgroundColor: 'transparent',
+                color: 'white',
+                border: '2px solid white',
+                padding: '10px 22px',
+                borderRadius: '8px',
+                fontSize: '16px',
+                cursor: 'pointer'
+              }}
+            >
+              Back to Home
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div id="add-item-page">

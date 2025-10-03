@@ -1,5 +1,6 @@
 const Item = require('../models/Item');
 const Category = require('../models/Category');
+const User = require('../models/User');
 const s3Service = require('../services/s3Service');
 const logger = require('../config/logger');
 const { validationResult } = require('express-validator');
@@ -148,6 +149,31 @@ const itemController = {
           success: false,
           error: 'Validation failed',
           details: errors.array()
+        });
+      }
+
+      // Check if user has a complete Stripe Connect account
+      const user = await User.findById(req.user.id);
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          error: 'User not found'
+        });
+      }
+
+      const canSell = user.stripeConnectAccount.accountId && 
+                     user.stripeConnectAccount.chargesEnabled && 
+                     user.stripeConnectAccount.payoutsEnabled &&
+                     user.stripeConnectAccount.detailsSubmitted;
+
+      if (!canSell) {
+        return res.status(400).json({
+          success: false,
+          error: 'Stripe Connect account required',
+          message: 'You must complete Stripe Connect onboarding before listing items for sale',
+          stripeConnectRequired: true,
+          accountStatus: user.stripeConnectAccount.onboardingStatus,
+          requirements: user.stripeConnectAccount.requirements
         });
       }
 

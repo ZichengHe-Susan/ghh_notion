@@ -65,6 +65,43 @@ const userSchema = new mongoose.Schema({
     default: null
     // Removed unique constraint to avoid null value conflicts
   },
+  stripeConnectAccount: {
+    accountId: {
+      type: String,
+      default: null
+    },
+    onboardingStatus: {
+      type: String,
+      enum: ['not_started', 'incomplete', 'pending', 'restricted', 'complete'],
+      default: 'not_started'
+    },
+    chargesEnabled: {
+      type: Boolean,
+      default: false
+    },
+    payoutsEnabled: {
+      type: Boolean,
+      default: false
+    },
+    detailsSubmitted: {
+      type: Boolean,
+      default: false
+    },
+    requirements: {
+      currentlyDue: [String],
+      eventuallyDue: [String],
+      pastDue: [String],
+      pendingVerification: [String]
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now
+    },
+    updatedAt: {
+      type: Date,
+      default: Date.now
+    }
+  },
   passwordResetExpires: {
     type: Date,
     select: false

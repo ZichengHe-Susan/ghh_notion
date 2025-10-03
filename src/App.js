@@ -17,6 +17,9 @@ import EmailChangeVerification from './pages/EmailChangeVerification';
 import ProtectedRoute from './components/ProtectedRoute';
 import StripeProvider from './components/StripeProvider';
 import OrderConfirmation from './components/OrderConfirmation';
+import StripeOnboarding from './components/StripeOnboarding';
+import OnboardingSuccess from './pages/OnboardingSuccess';
+import OnboardingRefresh from './pages/OnboardingRefresh';
 
 function App() {
   const [showChat, setShowChat] = useState(false);
@@ -37,6 +40,9 @@ function App() {
               <Route path="/checkedOut" element={<ProtectedRoute><OrderConfirmation /></ProtectedRoute>} />
               <Route path="/verify-email" element={<EmailVerification />} />
               <Route path="/verify-email-change" element={<EmailChangeVerification />} />
+              <Route path="/seller/onboarding" element={<ProtectedRoute><StripeOnboarding /></ProtectedRoute>} />
+              <Route path="/seller/onboarding/success" element={<ProtectedRoute><OnboardingSuccess /></ProtectedRoute>} />
+              <Route path="/seller/onboarding/refresh" element={<ProtectedRoute><OnboardingRefresh /></ProtectedRoute>} />
             </Routes>
             
             {/* Chat Interface */}
