@@ -14,11 +14,9 @@ const OrderHistory = () => {
             const fetchOrders = async () => {
                 try {
                     setLoading(true);
-                    const result = await apiService.getOrders();
+                    const result = await apiService.getUserOrders(currentUser.id);
                     if (result.success) {
-                        // Filter orders for current user
-                        const userOrders = result.data.filter(order => order.buyer === currentUser.id);
-                        setOrders(userOrders);
+                        setOrders(result.data);
                     } else {
                         console.error('Error fetching orders:', result.error);
                     }
@@ -46,7 +44,7 @@ const OrderHistory = () => {
                             Order ID: {order.orderNumber || order._id}
                         </Typography>
                         <Typography variant="body1" gutterBottom className="order-total">
-                            Total: ${order.totalPrice}
+                            Total: ${order.pricing.total}
                         </Typography>
                         <Typography variant="body1" gutterBottom className="order-status">
                             Status: {order.status}

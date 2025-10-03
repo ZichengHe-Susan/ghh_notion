@@ -56,21 +56,16 @@ const StripePaymentForm = ({
     setError(null);
 
     try {
-      console.log('Creating order with data:', orderData);
       
       // Create payment intent on the backend
       const paymentIntentResponse = await apiService.createOrder(orderData);
-      console.log('Backend response:', paymentIntentResponse);
-      
       if (!paymentIntentResponse.success) {
         throw new Error(paymentIntentResponse.error || 'Failed to create payment intent');
       }
 
       const { clientSecret, id: paymentIntentId } = paymentIntentResponse.data.paymentIntent;
-      console.log('Payment intent details:', { clientSecret: clientSecret.substring(0, 20) + '...', paymentIntentId });
 
       // Confirm the payment with Stripe
-      console.log('Confirming payment with Stripe...');
       const result = await stripe.confirmCardPayment(clientSecret, {
         payment_method: {
           card: elements.getElement(CardElement),
@@ -78,19 +73,29 @@ const StripePaymentForm = ({
             name: billingInfo.name,
             email: billingInfo.email,
             phone: billingInfo.phone,
-            address: billingInfo.address,
+            address: {
+              line1: billingInfo.address.line1,
+              line2: billingInfo.address.line2,
+              city: billingInfo.address.city,
+              state: billingInfo.address.state,
+              postal_code: billingInfo.address.postalCode, // Fix: postalCode -> postal_code
+              country: billingInfo.address.country
+            },
           },
         },
       });
 
-      console.log('Stripe confirmation result:', result);
+      console.log('🔄 STRIPE CONFIRMATION RESULT:', {
+        error: result.error,
+        paymentIntent: result.paymentIntent,
+        fullResult: result
+      });
 
       if (result.error) {
-        console.error('Stripe payment failed:', result.error);
+        console.error('❌ STRIPE PAYMENT FAILED:', result.error);
         setError(result.error.message);
         if (onError) onError(result.error);
       } else {
-        console.log('Payment succeeded!');
         // Payment succeeded
         if (onSuccess) {
           onSuccess({
@@ -102,7 +107,6 @@ const StripePaymentForm = ({
         }
       }
     } catch (err) {
-      console.error('Payment error:', err);
       const errorMessage = err.response?.data?.message || err.message || 'Payment failed. Please try again.';
       setError(errorMessage);
       if (onError) onError(err);

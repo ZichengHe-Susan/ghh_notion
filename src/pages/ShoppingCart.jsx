@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../css/ShoppingCart.css';
 import defaultImage from '../assets/coming-soon.jpg';
@@ -89,7 +89,7 @@ const ShoppingCart = () => {
             // Show payment options
             setShowPaymentMethods(true);
         } catch (error) {
-            console.error('Error during checkout:', error);
+            console.error('CHECKOUT ERROR:', error);
             alert('Checkout failed. Please try again.');
         }
     };
@@ -112,12 +112,15 @@ const ShoppingCart = () => {
             }
         });
         } catch (error) {
-            console.error('Error after successful payment:', error);
+            console.error(' ERROR AFTER SUCCESSFUL PAYMENT:', error);
         }
     };
 
     const handlePaymentError = (error) => {
-        console.error('Payment error:', error);
+        console.error('PAYMENT ERROR HANDLER CALLED:', {
+            error: error,
+            timestamp: new Date().toISOString()
+        });
         alert(`Payment failed: ${error.message || 'Please try again.'}`);
         setPaymentProcessing(false);
     };
@@ -125,27 +128,34 @@ const ShoppingCart = () => {
     const handleProceedToPayment = () => {
         setShowPaymentMethods(false);
         setShowPaymentForm(true);
-        setPaymentProcessing(true);
+        setPaymentProcessing(false); // Don't set to true here - let StripePaymentForm handle its own loading state
     };
 
     const handlePaymentMethodSelect = (paymentMethod) => {
         setSelectedPaymentMethod(paymentMethod);
     };
 
-    const createOrderData = () => {
+    const orderData = useMemo(() => {
+
+        if (!selectedAddress) {
+            return null;
+        }
+
         const transformedItems = cartItems.map(item => ({
             itemId: item._id || item.id,
             quantity: item.quantity
         }));
         
-        return {
+        const data = {
             items: transformedItems,
             shippingAddressId: selectedAddress._id,
             shippingMethod: 'standard',
             paymentMethod: 'stripe',
             notes: ''
         };
-    };
+
+        return data;
+    }, [cartItems, selectedAddress]);
     
     if (loading) {
         return (
@@ -257,10 +267,10 @@ const ShoppingCart = () => {
                 )}
                 
                 {/* Stripe Payment Form */}
-                {showPaymentForm && (
+                {showPaymentForm && orderData && (
                     <div className="stripe-payment-section">
                         <StripePaymentForm
-                            orderData={createOrderData()}
+                            orderData={orderData}
                             totalAmount={totalPrice}
                             onSuccess={handlePaymentSuccess}
                             onError={handlePaymentError}

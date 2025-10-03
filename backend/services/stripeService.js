@@ -19,29 +19,40 @@ class StripeService {
    * @param {Object} billingDetails - Customer billing information
    * @returns {Promise<Object>} Payment intent and payment record
    */
-  async createPaymentIntent(order, paymentMethod, billingDetails) {
+  async createPaymentIntent(order, paymentMethod = null, billingDetails = null) {
     try {
+      // Handle both actual order objects and temporary order data
+      const orderId = order._id ? order._id.toString() : 'temp';
+      const orderNumber = order.orderNumber || 'TEMP-' + Date.now();
+      
       // Calculate platform fee (2.9% + $0.30)
       const platformFee = Math.round((order.pricing.total * 0.029 + 30) * 100) / 100;
       const netAmount = order.pricing.total - platformFee;
 
       // Create payment intent with Stripe
-      const paymentIntent = await this.stripe.paymentIntents.create({
+      const paymentIntentData = {
         amount: Math.round(order.pricing.total * 100), // Convert to cents
         currency: order.pricing.currency.toLowerCase(),
         payment_method_types: ['card'],
         metadata: {
-          orderId: order._id.toString(),
-          orderNumber: order.orderNumber,
+          orderId: orderId,
+          orderNumber: orderNumber,
           buyerId: order.buyer.toString(),
           sellerId: order.seller.toString(),
           platformFee: platformFee.toString(),
           netAmount: netAmount.toString(),
           itemTitles: order.items.map(item => item.itemSnapshot.title).join(', ')
         },
-        description: `Payment for order ${order.orderNumber}`,
-        receipt_email: billingDetails.email,
-        shipping: {
+        description: `Payment for order ${orderNumber}`
+      };
+
+      // Add billing details if provided
+      if (billingDetails && billingDetails.email) {
+        paymentIntentData.receipt_email = billingDetails.email;
+      }
+
+      if (billingDetails && billingDetails.name && billingDetails.address) {
+        paymentIntentData.shipping = {
           name: billingDetails.name,
           address: {
             line1: billingDetails.address.line1,
@@ -51,45 +62,64 @@ class StripeService {
             postal_code: billingDetails.address.postalCode,
             country: billingDetails.address.country
           }
+        };
+      }
+
+      const paymentIntent = await this.stripe.paymentIntents.create(paymentIntentData);
+
+      // Only create payment record in database if we have a real order ID
+      let payment = null;
+      if (order._id) {
+        const paymentData = {
+          paymentIntentId: paymentIntent.id,
+          order: order._id,
+          user: order.buyer,
+          amount: order.pricing.total,
+          currency: order.pricing.currency,
+          status: paymentIntent.status,
+          fees: {
+            stripeFee: platformFee,
+            platformFee: platformFee,
+            netAmount: netAmount
+          },
+          metadata: {
+            orderNumber: orderNumber,
+            itemTitles: order.items.map(item => item.itemSnapshot.title),
+            sellerId: order.seller.toString(),
+            buyerId: order.buyer.toString(),
+            source: 'web'
+          }
+        };
+
+        // Add optional fields if provided
+        if (paymentMethod) {
+          paymentData.paymentMethod = {
+            type: paymentMethod.type,
+            ...paymentMethod
+          };
         }
-      });
 
-      // Create payment record in database
-      const payment = new Payment({
-        paymentIntentId: paymentIntent.id,
-        order: order._id,
-        user: order.buyer,
-        amount: order.pricing.total,
-        currency: order.pricing.currency,
-        status: paymentIntent.status,
-        paymentMethod: {
-          type: paymentMethod.type,
-          ...paymentMethod
-        },
-        billingDetails,
-        fees: {
-          stripeFee: platformFee,
-          platformFee: platformFee,
-          netAmount: netAmount
-        },
-        metadata: {
-          orderNumber: order.orderNumber,
-          itemTitles: order.items.map(item => item.itemSnapshot.title),
-          sellerId: order.seller.toString(),
-          buyerId: order.buyer.toString(),
-          source: 'web',
-          userAgent: billingDetails.userAgent,
-          ipAddress: billingDetails.ipAddress
+        if (billingDetails) {
+          paymentData.billingDetails = billingDetails;
+          if (billingDetails.userAgent) {
+            paymentData.metadata.userAgent = billingDetails.userAgent;
+          }
+          if (billingDetails.ipAddress) {
+            paymentData.metadata.ipAddress = billingDetails.ipAddress;
+          }
         }
-      });
 
-      await payment.save();
 
-      logger.info(`Payment intent created for order ${order.orderNumber}`, {
-        paymentIntentId: paymentIntent.id,
-        orderId: order._id,
-        amount: order.pricing.total
-      });
+        payment = new Payment(paymentData);
+        await payment.save();
+
+        logger.info(`Payment intent created for order ${orderNumber}`, {
+          paymentIntentId: paymentIntent.id,
+          orderId: order._id,
+          amount: order.pricing.total
+        });
+      } 
+
 
       return {
         paymentIntent,

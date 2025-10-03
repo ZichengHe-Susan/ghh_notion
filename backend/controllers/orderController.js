@@ -223,8 +223,8 @@ const orderController = {
       const tax = (subtotal + totalShippingCost) * 0.08; // 8% tax
       const total = subtotal + totalShippingCost + tax + platformFee;
 
-      // Create order
-      const orderData = {
+      // Create a temporary order object for payment intent creation
+      const tempOrderData = {
         buyer: buyerId,
         seller: sellerId,
         items: orderItems,
@@ -242,7 +242,6 @@ const orderController = {
         },
         payment: {
           method: paymentMethod,
-          paymentIntentId: '', // Will be set when payment is processed
           status: 'pending'
         },
         notes: {
@@ -252,6 +251,17 @@ const orderController = {
           source: 'web',
           userAgent: req.get('User-Agent'),
           ipAddress: req.ip
+        }
+      };
+
+      const stripeResult = await stripeService.createPaymentIntent(tempOrderData);
+
+      // Now create the actual order with the payment intent ID
+      const orderData = {
+        ...tempOrderData,
+        payment: {
+          ...tempOrderData.payment,
+          paymentIntentId: stripeResult.paymentIntent.id
         }
       };
 
@@ -273,39 +283,27 @@ const orderController = {
         );
       }
 
-      // Create payment intent
-      const paymentIntent = await stripeService.createPaymentIntent({
-        amount: Math.round(total * 100), // Convert to cents
-        currency: 'usd',
-        metadata: {
-          orderId: order._id.toString(),
-          buyerId: buyerId,
-          sellerId: sellerId
-        }
-      });
-
-      order.payment.paymentIntentId = paymentIntent.id;
-      await order.save({ session });
-
       await session.commitTransaction();
 
       // Send notifications
       await notificationService.createOrderNotification(order, 'order_created');
 
-      res.status(201).json({
+      const responseData = {
         success: true,
         data: {
           order,
           paymentIntent: {
-            clientSecret: paymentIntent.client_secret,
-            id: paymentIntent.id
+            clientSecret: stripeResult.paymentIntent.client_secret,
+            id: stripeResult.paymentIntent.id
           }
         }
-      });
+      };
+
+
+      res.status(201).json(responseData);
 
     } catch (error) {
       await session.abortTransaction();
-      console.error('Create order error:', error);
       res.status(400).json({
         success: false,
         message: 'Failed to create order',
@@ -589,15 +587,13 @@ const orderController = {
 
       res.json({
         success: true,
-        data: {
-          orders,
-          pagination: {
-            currentPage: parseInt(page),
-            totalPages: Math.ceil(totalOrders / limit),
-            totalOrders,
-            hasNext: page * limit < totalOrders,
-            hasPrev: page > 1
-          }
+        data: orders,
+        pagination: {
+          currentPage: parseInt(page),
+          totalPages: Math.ceil(totalOrders / limit),
+          totalOrders,
+          hasNext: page * limit < totalOrders,
+          hasPrev: page > 1
         }
       });
 

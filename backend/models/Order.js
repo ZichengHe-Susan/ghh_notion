@@ -4,7 +4,12 @@ const orderSchema = new mongoose.Schema({
   orderNumber: {
     type: String,
     required: true,
-    unique: true
+    unique: true,
+    default: function() {
+      const timestamp = Date.now().toString(36);
+      const random = Math.random().toString(36).substr(2, 5);
+      return `ORD-${timestamp}-${random}`.toUpperCase();
+    }
   },
   buyer: {
     type: mongoose.Schema.Types.ObjectId,
