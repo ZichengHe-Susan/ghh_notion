@@ -27,6 +27,7 @@ const uploadRoutes = require('./routes/upload');
 const notificationRoutes = require('./routes/notifications');
 const cartRoutes = require('./routes/cart');
 const addressRoutes = require('./routes/addresses');
+const stripeWebhookRoutes = require('./routes/stripeWebhook');
 
 // Import services
 const orderLifecycleService = require('./services/orderLifecycleService');
@@ -62,6 +63,10 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 }));
+
+// The Stripe webhook route must be registered before express.json()
+// to ensure the raw request body is available for signature verification.
+app.use('/api/payments/webhook', stripeWebhookRoutes);
 
 app.use(compression());
 

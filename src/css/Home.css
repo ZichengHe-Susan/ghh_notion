@@ -100,3 +100,8 @@ button:hover {
     text-align: center;
     margin-bottom: 20px;
 }
+
+
+::-webkit-scrollbar{
+    display: none;
+}

@@ -97,6 +97,11 @@ class StripeService {
             type: paymentMethod.type,
             ...paymentMethod
           };
+        } else {
+          // Provide a default paymentMethod to pass validation, as the type is required.
+          paymentData.paymentMethod = {
+            type: 'card'
+          };
         }
 
         if (billingDetails) {
@@ -374,7 +379,7 @@ class StripeService {
       logger.info(`Processing webhook event: ${eventType}`, { eventId });
 
       // Find payment record
-      const paymentIntentId = data.object.id;
+      const paymentIntentId = data.object.payment_intent || data.object.id;
       const payment = await Payment.findOne({ paymentIntentId });
 
       if (!payment) {

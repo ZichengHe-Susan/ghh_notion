@@ -223,8 +223,8 @@ const orderController = {
       const tax = (subtotal + totalShippingCost) * 0.08; // 8% tax
       const total = subtotal + totalShippingCost + tax + platformFee;
 
-      // Create a temporary order object for payment intent creation
-      const tempOrderData = {
+      // Create the order first to get an ID
+      const orderData = {
         buyer: buyerId,
         seller: sellerId,
         items: orderItems,
@@ -254,20 +254,19 @@ const orderController = {
         }
       };
 
-      const stripeResult = await stripeService.createPaymentIntent(tempOrderData);
-
-      // Now create the actual order with the payment intent ID
-      const orderData = {
-        ...tempOrderData,
-        payment: {
-          ...tempOrderData.payment,
-          paymentIntentId: stripeResult.paymentIntent.id
-        }
-      };
-
       const order = new Order(orderData);
       await order.save({ session });
 
+      // Now create the payment intent with the real order
+      const stripeResult = await stripeService.createPaymentIntent(order);
+
+      // Update order with payment details
+      order.payment.paymentIntentId = stripeResult.paymentIntent.id;
+      if (stripeResult.payment) {
+        order.payment.paymentId = stripeResult.payment._id;
+      }
+      await order.save({ session });
+      
       // Reserve inventory (atomic operation)
       for (const itemData of items) {
         await Item.findByIdAndUpdate(

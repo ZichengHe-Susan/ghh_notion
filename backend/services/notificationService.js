@@ -379,7 +379,7 @@ class NotificationService {
       priority: 'high',
       data: {
         order: order._id,
-        amount: order.totalAmount,
+        amount: order.pricing.total,
         currency: order.currency || 'USD',
         ...additionalData
       }
@@ -388,7 +388,7 @@ class NotificationService {
     switch (type) {
       case 'order_created':
         notificationData.title = 'New Order Received';
-        notificationData.message = `You have received a new order for $${order.totalAmount}`;
+        notificationData.message = `You have received a new order for $${order.pricing.total}`;
         break;
       case 'order_confirmed':
         notificationData.title = 'Order Confirmed';

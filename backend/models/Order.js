@@ -116,7 +116,11 @@ const orderSchema = new mongoose.Schema({
     },
     paymentIntentId: {
       type: String,
-      required: true
+      // required: true // Temporarily disable until payment intent is created
+    },
+    paymentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Payment'
     },
     status: {
       type: String,

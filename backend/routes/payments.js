@@ -7,7 +7,6 @@ const paymentController = require('../controllers/paymentController');
 // Import middleware
 const { auth } = require('../middleware/auth');
 const { authorize } = require('../middleware/authorize');
-const { verifyStripeWebhook, parseStripeWebhookBody, logStripeWebhook, handleWebhookIdempotency, validateWebhookEvent, handleWebhookError } = require('../middleware/webhook');
 const { body, param, query } = require('express-validator');
 
 // Validation middleware
@@ -65,19 +64,6 @@ router.post('/create-intent', auth, validateCreatePaymentIntent, paymentControll
 // @desc    Confirm payment
 // @access  Private
 router.post('/confirm', auth, validateConfirmPayment, paymentController.confirmPayment);
-
-// @route   POST /api/payments/webhook
-// @desc    Handle Stripe webhooks
-// @access  Public (Stripe only)
-router.post('/webhook', 
-  parseStripeWebhookBody,
-  verifyStripeWebhook,
-  logStripeWebhook,
-  handleWebhookIdempotency,
-  validateWebhookEvent,
-  paymentController.handleWebhook,
-  handleWebhookError
-);
 
 // @route   GET /api/payments/methods
 // @desc    Get user's payment methods

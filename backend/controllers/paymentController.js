@@ -228,121 +228,23 @@ const paymentController = {
    * @access Public (Stripe only)
    */
   handleWebhook: async (req, res) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
     try {
-      const signature = req.get('stripe-signature');
-      const payload = JSON.stringify(req.body);
-
-      const event = stripeService.verifyWebhookSignature(payload, signature);
+      const event = req.stripeEvent; // Event is already verified by middleware
 
       // Process the webhook event
-      const result = await stripeService.handleWebhookEvent(event);
-
-      // Handle order lifecycle updates based on payment events
-      if (event.type === 'payment_intent.succeeded') {
-        const paymentIntent = event.data.object;
-        const orderId = paymentIntent.metadata?.orderId;
-
-        if (orderId) {
-          const order = await Order.findById(orderId).session(session);
-          if (order && order.status === 'pending') {
-            // Update order status
-            await order.confirmPayment();
-            
-            // Update payment record
-            const payment = await Payment.findOne({ paymentIntentId: paymentIntent.id }).session(session);
-            if (payment) {
-              payment.status = 'succeeded';
-              payment.paidAt = new Date();
-              await payment.save({ session });
-            }
-
-            // Atomic inventory reduction
-            for (const orderItem of order.items) {
-              await Item.findByIdAndUpdate(
-                orderItem.item,
-                {
-                  $set: { 
-                    'availability.status': 'sold',
-                    'availability.reservedUntil': null
-                  }
-                },
-                { session }
-              );
-            }
-
-            // Initialize escrow
-            await escrowService.initializeEscrow(order._id);
-
-            // Send notifications
-            await notificationService.createOrderNotification(order, 'order_confirmed');
-            await notificationService.createOrderNotification(order, 'payment_received');
-          }
-        }
-      } else if (event.type === 'payment_intent.payment_failed') {
-        const paymentIntent = event.data.object;
-        const orderId = paymentIntent.metadata?.orderId;
-
-        if (orderId) {
-          const order = await Order.findById(orderId).session(session);
-          if (order && order.status === 'pending') {
-            // Release reserved inventory
-            for (const orderItem of order.items) {
-              await Item.findByIdAndUpdate(
-                orderItem.item,
-                {
-                  $inc: { 'availability.quantity': orderItem.quantity },
-                  $set: { 
-                    'availability.status': 'available',
-                    'availability.reservedUntil': null
-                  }
-                },
-                { session }
-              );
-            }
-
-            // Update payment record
-            const payment = await Payment.findOne({ paymentIntentId: paymentIntent.id }).session(session);
-            if (payment) {
-              payment.status = 'failed';
-              await payment.save({ session });
-            }
-
-            // Send notification
-            await notificationService.createOrderNotification(order, 'payment_failed');
-          }
-        }
-      } else if (event.type === 'charge.dispute.created') {
-        const charge = event.data.object;
-        const paymentIntentId = charge.payment_intent;
-        
-        const payment = await Payment.findOne({ paymentIntentId }).populate('order').session(session);
-        if (payment && payment.order) {
-          await payment.order.initiateDispute('Payment dispute created');
-          await notificationService.createOrderNotification(payment.order, 'dispute_opened');
-        }
-      }
-
-      await session.commitTransaction();
+      await stripeService.handleWebhookEvent(event);
 
       res.json({
         success: true,
-        message: 'Webhook processed successfully',
-        processed: result.processed
+        message: 'Webhook processed successfully'
       });
-
     } catch (error) {
-      await session.abortTransaction();
       logger.error('Error handling webhook:', error);
       res.status(400).json({
         success: false,
         message: 'Webhook processing failed',
         error: error.message
       });
-    } finally {
-      session.endSession();
     }
   },
 

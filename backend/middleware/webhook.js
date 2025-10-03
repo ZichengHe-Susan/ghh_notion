@@ -21,7 +21,7 @@ const verifyStripeWebhook = (req, res, next) => {
     }
 
     // Store raw body for signature verification
-    const payload = JSON.stringify(req.body);
+    const payload = req.body;
     
     try {
       // Verify the webhook signature
