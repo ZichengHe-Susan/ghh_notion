@@ -21,6 +21,7 @@ const CARD_ELEMENT_OPTIONS = {
 const StripePaymentForm = ({ 
   orderData, 
   totalAmount, 
+  pricingBreakdown,
   onSuccess, 
   onError,
   billingDetails = {},
@@ -245,9 +246,36 @@ const StripePaymentForm = ({
         </div>
 
         <div className="payment-summary">
-          <div className="amount-display">
-            <strong>Total Amount: ${totalAmount.toFixed(2)}</strong>
-          </div>
+          <h3>Order Summary</h3>
+          
+          {pricingBreakdown ? (
+            <div className="pricing-breakdown">
+              <div className="breakdown-row">
+                <span>Subtotal:</span>
+                <span>${pricingBreakdown.subtotal.toFixed(2)}</span>
+              </div>
+              <div className="breakdown-row">
+                <span>Shipping:</span>
+                <span>${pricingBreakdown.shippingCost.toFixed(2)}</span>
+              </div>
+              <div className="breakdown-row">
+                <span>Tax:</span>
+                <span>${pricingBreakdown.tax.toFixed(2)}</span>
+              </div>
+              <div className="breakdown-row">
+                <span>Platform Fee:</span>
+                <span>${pricingBreakdown.platformFee.toFixed(2)}</span>
+              </div>
+              <div className="breakdown-row total-row">
+                <span><strong>Total:</strong></span>
+                <span><strong>${pricingBreakdown.total.toFixed(2)}</strong></span>
+              </div>
+            </div>
+          ) : (
+            <div className="amount-display">
+              <strong>Total Amount: ${totalAmount.toFixed(2)}</strong>
+            </div>
+          )}
           
           {error && (
             <div className="error-message">
@@ -260,7 +288,7 @@ const StripePaymentForm = ({
             disabled={!stripe || isLoading || parentIsLoading}
             className={`payment-button ${(isLoading || parentIsLoading) ? 'loading' : ''}`}
           >
-            {isLoading || parentIsLoading ? 'Processing...' : `Pay $${totalAmount.toFixed(2)}`}
+            {isLoading || parentIsLoading ? 'Processing...' : `Pay $${(pricingBreakdown?.total || totalAmount).toFixed(2)}`}
           </button>
         </div>
       </form>

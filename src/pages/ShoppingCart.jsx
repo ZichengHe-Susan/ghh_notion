@@ -28,6 +28,8 @@ const ShoppingCart = () => {
     const [paymentProcessing, setPaymentProcessing] = useState(false);
     const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
     const [showPaymentMethods, setShowPaymentMethods] = useState(false);
+    const [pricingBreakdown, setPricingBreakdown] = useState(null);
+    const [calculatingFees, setCalculatingFees] = useState(false);
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -125,10 +127,47 @@ const ShoppingCart = () => {
         setPaymentProcessing(false);
     };
 
-    const handleProceedToPayment = () => {
-        setShowPaymentMethods(false);
-        setShowPaymentForm(true);
-        setPaymentProcessing(false); // Don't set to true here - let StripePaymentForm handle its own loading state
+    const calculateOrderFees = async () => {
+        try {
+            setCalculatingFees(true);
+            
+            if (!orderData) {
+                throw new Error('Order data is not available');
+            }
+
+            const response = await apiService.calculateOrderFees(orderData);
+            
+            if (!response.success) {
+                throw new Error(response.error || 'Failed to calculate order fees');
+            }
+
+            setPricingBreakdown(response.data.pricing);
+            return response.data.pricing;
+        } catch (error) {
+            console.error('Error calculating order fees:', error);
+            alert(`Failed to calculate order fees: ${error.message}`);
+            return null;
+        } finally {
+            setCalculatingFees(false);
+        }
+    };
+
+    const handleProceedToPayment = async () => {
+        try {
+            // Calculate fees first
+            const fees = await calculateOrderFees();
+            
+            if (!fees) {
+                return; // Error already handled in calculateOrderFees
+            }
+
+            setShowPaymentMethods(false);
+            setShowPaymentForm(true);
+            setPaymentProcessing(false); // Don't set to true here - let StripePaymentForm handle its own loading state
+        } catch (error) {
+            console.error('Error proceeding to payment:', error);
+            alert('Failed to proceed to payment. Please try again.');
+        }
     };
 
     const handlePaymentMethodSelect = (paymentMethod) => {
@@ -252,13 +291,15 @@ const ShoppingCart = () => {
                             <button 
                                 onClick={handleProceedToPayment}
                                 className="proceed-payment-btn"
+                                disabled={calculatingFees}
                             >
-                                Continue with New Payment Method
+                                {calculatingFees ? 'Calculating Fees...' : 'Continue with New Payment Method'}
                             </button>
                             
                             <button 
                                 onClick={() => setShowPaymentMethods(false)}
                                 className="cancel-payment-btn"
+                                disabled={calculatingFees}
                             >
                                 Back to Cart
                             </button>
@@ -272,6 +313,7 @@ const ShoppingCart = () => {
                         <StripePaymentForm
                             orderData={orderData}
                             totalAmount={totalPrice}
+                            pricingBreakdown={pricingBreakdown}
                             onSuccess={handlePaymentSuccess}
                             onError={handlePaymentError}
                             billingDetails={{

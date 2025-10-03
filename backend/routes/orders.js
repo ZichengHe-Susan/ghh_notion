@@ -29,6 +29,11 @@ router.get('/:id/tracking', auth, orderController.getOrderTracking);
 // @access  Private
 router.get('/:id', auth, orderController.getOrder);
 
+// @route   POST /api/orders/calculate-fees
+// @desc    Calculate order fees and pricing
+// @access  Private
+router.post('/calculate-fees', auth, orderController.calculateOrderFees);
+
 // @route   POST /api/orders
 // @desc    Create new order
 // @access  Private

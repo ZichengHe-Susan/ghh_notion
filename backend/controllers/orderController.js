@@ -122,6 +122,114 @@ const orderController = {
     }
   },
 
+  // @desc    Calculate order fees and pricing
+  // @route   POST /api/orders/calculate-fees
+  // @access  Private
+  calculateOrderFees: async (req, res) => {
+    try {
+      const { items, shippingAddressId } = req.body;
+      const buyerId = req.user.id;
+
+      if (!items || !Array.isArray(items) || items.length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'Items array is required and cannot be empty'
+        });
+      }
+
+      let subtotal = 0;
+      let totalShippingCost = 0;
+      const orderItems = [];
+      const sellerIds = new Set();
+
+      // Calculate pricing for each item
+      for (const itemData of items) {
+        const item = await Item.findById(itemData.itemId);
+        
+        if (!item) {
+          return res.status(404).json({
+            success: false,
+            error: `Item ${itemData.itemId} not found`
+          });
+        }
+
+        if (item.availability.status !== 'available' || item.availability.quantity < itemData.quantity) {
+          return res.status(400).json({
+            success: false,
+            error: `Insufficient inventory for item: ${item.title}`
+          });
+        }
+
+        if (item.seller.toString() === buyerId) {
+          return res.status(400).json({
+            success: false,
+            error: 'Cannot purchase your own item'
+          });
+        }
+
+        sellerIds.add(item.seller.toString());
+        
+        const itemTotal = item.price * itemData.quantity;
+        subtotal += itemTotal;
+        totalShippingCost += item.shipping.shippingCost || 0;
+
+        orderItems.push({
+          item: item._id,
+          quantity: itemData.quantity,
+          price: item.price,
+          itemSnapshot: {
+            title: item.title,
+            description: item.description,
+            images: item.images.map(img => img.url),
+            condition: item.condition,
+            seller: {
+              name: `${item.seller.firstName} ${item.seller.lastName}`,
+              email: item.seller.email
+            }
+          }
+        });
+      }
+
+      // For multi-seller orders, we'll create separate orders
+      if (sellerIds.size > 1) {
+        return res.status(400).json({
+          success: false,
+          error: 'Multi-seller orders not supported yet. Please create separate orders for different sellers.'
+        });
+      }
+
+      // Calculate fees and taxes
+      const platformFee = subtotal * 0.05; // 5% platform fee
+      const tax = (subtotal + totalShippingCost) * 0.08; // 8% tax
+      const total = subtotal + totalShippingCost + tax + platformFee;
+
+      const pricingBreakdown = {
+        subtotal: Math.round(subtotal * 100) / 100,
+        shippingCost: Math.round(totalShippingCost * 100) / 100,
+        tax: Math.round(tax * 100) / 100,
+        platformFee: Math.round(platformFee * 100) / 100,
+        total: Math.round(total * 100) / 100,
+        currency: 'USD'
+      };
+
+      res.json({
+        success: true,
+        data: {
+          pricing: pricingBreakdown,
+          items: orderItems,
+          sellerId: Array.from(sellerIds)[0]
+        }
+      });
+
+    } catch (error) {
+      console.error('Calculate order fees error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to calculate order fees'
+      });
+    }
+  },
+
   // @desc    Create new order
   // @route   POST /api/orders
   // @access  Private

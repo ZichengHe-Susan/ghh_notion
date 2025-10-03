@@ -386,6 +386,13 @@ class ApiService {
   }
 
   // Order methods (if implemented in backend)
+  async calculateOrderFees(orderData) {
+    return this.request('/orders/calculate-fees', {
+      method: 'POST',
+      body: JSON.stringify(orderData),
+    });
+  }
+
   async createOrder(orderData) {
     return this.request('/orders', {
       method: 'POST',
