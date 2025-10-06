@@ -69,6 +69,21 @@ const ProfileModal = ({ showProfile, handleClose }) => {
     setActiveTab(newValue);
   };
 
+  const handleItemDeleted = (deletedItemId) => {
+    // Remove the deleted item from the userItems array
+    setUserItems(prevItems => prevItems.filter(item => (item._id || item.id) !== deletedItemId));
+    
+    // Update the sold count
+    const remainingItems = userItems.filter(item => (item._id || item.id) !== deletedItemId);
+    const soldCount = remainingItems.filter(item => 
+      item.availability?.status === 'sold' || 
+      item.status === 'sold' || 
+      item.availability?.quantity === 0 ||
+      item.orderInfo
+    ).length;
+    setItemSold(soldCount);
+  };
+
   const calculateJoinedDuration = (createdAt) => {
     if (!createdAt) return 'Recently';
     
@@ -160,7 +175,7 @@ const ProfileModal = ({ showProfile, handleClose }) => {
 
         {/* Tab Content */}
         <div className="tab-content">
-          {activeTab === 0 && <ListedItems userItems={userItems} />}
+          {activeTab === 0 && <ListedItems userItems={userItems} onItemDeleted={handleItemDeleted} />}
           {activeTab === 1 && <OrderHistory />}
           {activeTab === 2 && <EditProfile />}
         </div>

@@ -1,12 +1,42 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import apiService from '../services/api';
 
-const ListedItems = ({ userItems }) => {
+const ListedItems = ({ userItems, onItemDeleted }) => {
   const navigate = useNavigate();
+  const [deletingItemId, setDeletingItemId] = useState(null);
 
   const handleItemClick = (itemId) => {
     navigate(`/item/${itemId}`);
+  };
+
+  const handleDeleteItem = async (itemId, event) => {
+    event.stopPropagation(); // Prevent navigation when clicking delete
+    
+    if (!window.confirm('Are you sure you want to delete this item? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      setDeletingItemId(itemId);
+      const result = await apiService.deleteItem(itemId);
+      
+      if (result.success) {
+        // Call the callback to refresh the items list
+        if (onItemDeleted) {
+          onItemDeleted(itemId);
+        }
+        alert('Item deleted successfully.');
+      } else {
+        alert(`Failed to delete item: ${result.error}`);
+      }
+    } catch (err) {
+      console.error('Error deleting item:', err);
+      alert('Failed to delete item. Please try again.');
+    } finally {
+      setDeletingItemId(null);
+    }
   };
 
   const isItemSold = (item) => {
@@ -73,6 +103,36 @@ const ListedItems = ({ userItems }) => {
                   position: 'relative'
                 }}
               >
+                {/* Delete Button - only show for available items */}
+                {!sold && (
+                  <button
+                    className="delete-item-btn"
+                    onClick={(e) => handleDeleteItem(item._id || item.id, e)}
+                    disabled={deletingItemId === (item._id || item.id)}
+                    style={{
+                      position: 'absolute',
+                      top: '10px',
+                      left: '10px',
+                      backgroundColor: '#ff4444',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '50%',
+                      width: '30px',
+                      height: '30px',
+                      fontSize: '16px',
+                      cursor: 'pointer',
+                      zIndex: 10,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      opacity: deletingItemId === (item._id || item.id) ? 0.6 : 1
+                    }}
+                    title="Delete Item"
+                  >
+                    {deletingItemId === (item._id || item.id) ? '...' : '×'}
+                  </button>
+                )}
+
                 {/* Status Badge */}
                 <div 
                   className="status-badge"

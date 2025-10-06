@@ -65,20 +65,6 @@ const ViewItems = () => {
     }
   };
 
-  const deleteItem = async (itemId) => {
-    try {
-      const result = await apiService.deleteItem(itemId);
-      if (result.success) {
-        setItemsList(itemsList.filter(item => item._id !== itemId));
-        alert("Item deleted successfully.");
-      } else {
-        alert(`Failed to delete item: ${result.error}`);
-      }
-    } catch (err) {
-      console.error("Error deleting item: ", err);
-      alert("Failed to delete item. Please try again.");
-    }
-  };
 
   if (loading) {
     return (
@@ -110,15 +96,15 @@ const ViewItems = () => {
               </Link> 
               <p className="itemPrice">Price: ${item.price}</p>
               <div className="button-group">
-              {currentUser && isEmailVerified && currentUser.id !== item.seller && 
+              {currentUser && isEmailVerified && currentUser.id !== item.seller._id && 
                 (<button
                   className="addToCartButton" 
                   onClick={() => handleAddToCart(item)} 
                   >Add to Cart</button>)}
-                  {currentUser && isEmailVerified && currentUser.id === item.seller && ( 
-                  <button className="deleteButton" onClick={() => deleteItem(item._id)}>
-                    Delete Item
-                </button>
+                  {currentUser && isEmailVerified && currentUser.id === item.seller._id && ( 
+                  <span className="own-listing-tag">
+                    Your own listing
+                  </span>
                 )}
               </div>
             </div>

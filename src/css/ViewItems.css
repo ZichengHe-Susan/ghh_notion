@@ -118,6 +118,18 @@
   border-color: #232d4b; 
 }
 
+.own-listing-tag {
+  padding: 8px 12px;
+  font-size: 12px;
+  background-color: #e8f5e8;
+  color: #2e7d32;
+  border: 2px solid #4caf50;
+  border-radius: 5px;
+  text-transform: uppercase;
+  font-weight: bold;
+  display: inline-block;
+}
+
 
 .itemTitle {
   /* color: inherit;  */
