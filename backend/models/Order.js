@@ -306,11 +306,25 @@ orderSchema.methods.confirmPayment = function() {
 };
 
 orderSchema.methods.markAsShipped = function(trackingNumber, carrier) {
+  console.log('=== MARK AS SHIPPED DEBUG ===');
+  console.log('Tracking Number received:', trackingNumber);
+  console.log('Carrier received:', carrier);
+  console.log('Before update - shipping.trackingNumber:', this.shipping.trackingNumber);
+  console.log('Before update - shipping.carrier:', this.shipping.carrier);
+  
   this.status = 'shipped';
   this.shipping.trackingNumber = trackingNumber;
   this.shipping.carrier = carrier;
   this.shipping.estimatedDelivery = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000); // 3 days
-  return this.save();
+  
+  console.log('After update - shipping.trackingNumber:', this.shipping.trackingNumber);
+  console.log('After update - shipping.carrier:', this.shipping.carrier);
+  
+  return this.save().then(savedOrder => {
+    console.log('After save - shipping.trackingNumber:', savedOrder.shipping.trackingNumber);
+    console.log('After save - shipping.carrier:', savedOrder.shipping.carrier);
+    return savedOrder;
+  });
 };
 
 orderSchema.methods.markAsDelivered = function() {

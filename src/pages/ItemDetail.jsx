@@ -12,6 +12,9 @@ const ItemDetails = () => {
   const [itemData, setItemData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [showShippingForm, setShowShippingForm] = useState(false);
+  const [trackingNumber, setTrackingNumber] = useState('');
+  const [carrier, setCarrier] = useState('');
 
   const handleGoBack = () => {
     navigate('/');
@@ -25,12 +28,26 @@ const ItemDetails = () => {
     return currentUser && item.seller && (item.seller._id === currentUser.id || item.seller.id === currentUser.id);
   };
 
-  const handleUpdateDeliveryStatus = async (newStatus) => {
+  const formatAddress = (addressObj) => {
+    if (!addressObj?.address?.address) return 'Location not specified';
+    
+    const addr = addressObj.address.address;
+    const parts = [];
+    
+    if (addr.street) parts.push(addr.street);
+    if (addr.city) parts.push(addr.city);
+    if (addr.state) parts.push(addr.state);
+    if (addr.zipCode) parts.push(addr.zipCode);
+    
+    return parts.join(', ');
+  };
+
+  const handleUpdateDeliveryStatus = async (newStatus, additionalData = {}) => {
     if (!itemData?.orderInfo?.orderId) return;
     
     try {
       setUpdatingStatus(true);
-      const result = await apiService.updateOrderStatus(itemData.orderInfo.orderId, newStatus);
+      const result = await apiService.updateOrderStatus(itemData.orderInfo.orderId, newStatus, additionalData);
       
       if (result.success) {
         // Refresh item data to get updated order info
@@ -38,6 +55,10 @@ const ItemDetails = () => {
         if (refreshResult.success) {
           setItemData(refreshResult.data);
         }
+        // Reset form state
+        setShowShippingForm(false);
+        setTrackingNumber('');
+        setCarrier('');
       } else {
         alert('Failed to update delivery status: ' + result.error);
       }
@@ -47,6 +68,28 @@ const ItemDetails = () => {
     } finally {
       setUpdatingStatus(false);
     }
+  };
+
+  const handleMarkAsShipped = () => {
+    if (!trackingNumber.trim() || !carrier.trim()) {
+      alert('Please enter both tracking number and carrier');
+      return;
+    }
+    
+    handleUpdateDeliveryStatus('shipped', {
+      trackingNumber: trackingNumber.trim(),
+      carrier: carrier.trim()
+    });
+  };
+
+  const handleShowShippingForm = () => {
+    setShowShippingForm(true);
+  };
+
+  const handleCancelShippingForm = () => {
+    setShowShippingForm(false);
+    setTrackingNumber('');
+    setCarrier('');
   };
 
   useEffect(() => {
@@ -108,7 +151,7 @@ const ItemDetails = () => {
         <h1>{itemData.title || itemData.name}</h1>
         <p><strong>Price:</strong> ${itemData.price}</p>
         <p><strong>Description:</strong> {itemData.description}</p>
-        <p><strong>Location Details:</strong> {itemData.location ? `${itemData.location.address}, ${itemData.location.city}, ${itemData.location.state} ${itemData.location.zipCode}` : 'Location not specified'}</p>
+        <p><strong>Location Details:</strong> {formatAddress(itemData.location)}</p>
         
         {itemData.shipping && itemData.shipping.shippingMethods && itemData.shipping.shippingMethods.length > 0 && (
           <div className="shipping-methods">
@@ -171,12 +214,7 @@ const ItemDetails = () => {
               <div style={{ marginBottom: '15px' }}>
                 <strong>Shipping Address:</strong>
                 <div style={{ marginLeft: '10px', marginTop: '5px' }}>
-                  {itemData.orderInfo.shipping.address.address.street && (
-                    <div>{itemData.orderInfo.shipping.address.address.street}</div>
-                  )}
-                  <div>
-                    {itemData.orderInfo.shipping.address.address.city}, {itemData.orderInfo.shipping.address.address.state} {itemData.orderInfo.shipping.address.address.zipCode}
-                  </div>
+                  {formatAddress(itemData.orderInfo.shipping.address)}
                 </div>
               </div>
             )}
@@ -227,11 +265,11 @@ const ItemDetails = () => {
               </div>
             )}
 
-            {/* Delivery Status Update Buttons */}
-            {itemData.orderInfo.status === 'paid' && (
+            {/* Mark as Shipped button - only for sellers */}
+            {itemData.orderInfo.status === 'paid' && !showShippingForm && isSeller && (
               <div style={{ marginTop: '20px' }}>
                 <button 
-                  onClick={() => handleUpdateDeliveryStatus('shipped')}
+                  onClick={handleShowShippingForm}
                   disabled={updatingStatus}
                   style={{
                     backgroundColor: '#2196f3',
@@ -244,12 +282,58 @@ const ItemDetails = () => {
                     opacity: updatingStatus ? 0.6 : 1
                   }}
                 >
-                  {updatingStatus ? 'Updating...' : 'Mark as Shipped'}
+                  Mark as Shipped
                 </button>
               </div>
             )}
 
-            {itemData.orderInfo.status === 'shipped' && (
+            {/* Shipping Form - only for sellers */}
+            {itemData.orderInfo.status === 'paid' && showShippingForm && isSeller && (
+              <div className="shipping-form">
+                <h4>Shipping Information</h4>
+                
+                <div className="form-group">
+                  <label>Tracking Number *</label>
+                  <input
+                    type="text"
+                    value={trackingNumber}
+                    onChange={(e) => setTrackingNumber(e.target.value)}
+                    placeholder="Enter tracking number"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label>Carrier *</label>
+                  <input
+                    type="text"
+                    value={carrier}
+                    onChange={(e) => setCarrier(e.target.value)}
+                    placeholder="Enter carrier name (e.g., UPS, FedEx, USPS)"
+                  />
+                </div>
+
+                <div className="form-actions">
+                  <button 
+                    className="confirm-btn"
+                    onClick={handleMarkAsShipped}
+                    disabled={updatingStatus || !trackingNumber.trim() || !carrier.trim()}
+                  >
+                    {updatingStatus ? 'Updating...' : 'Confirm Shipment'}
+                  </button>
+                  
+                  <button 
+                    className="cancel-btn"
+                    onClick={handleCancelShippingForm}
+                    disabled={updatingStatus}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Mark as Delivered button - only for buyers, not sellers */}
+            {itemData.orderInfo.status === 'shipped' && !isSeller && (
               <div style={{ marginTop: '20px' }}>
                 <button 
                   onClick={() => handleUpdateDeliveryStatus('delivered')}

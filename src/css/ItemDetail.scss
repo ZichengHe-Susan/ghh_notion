@@ -182,5 +182,90 @@ html, body {
     border-left: 3px solid #2196f3;
     margin-top: 15px;
   }
+
+  .shipping-form {
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    margin-top: 20px;
+
+    h4 {
+      margin-top: 0;
+      margin-bottom: 15px;
+      color: #333;
+      font-size: 1.1rem;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+        color: #333;
+        font-size: 14px;
+      }
+
+      input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 14px;
+        box-sizing: border-box;
+        transition: border-color 0.3s ease;
+
+        &:focus {
+          outline: none;
+          border-color: #2196f3;
+          box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+        }
+
+        &::placeholder {
+          color: #999;
+        }
+      }
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+
+      button {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: all 0.3s ease;
+
+        &:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
+        &.confirm-btn {
+          background-color: #4caf50;
+          color: white;
+
+          &:hover:not(:disabled) {
+            background-color: #388e3c;
+          }
+        }
+
+        &.cancel-btn {
+          background-color: #f44336;
+          color: white;
+
+          &:hover:not(:disabled) {
+            background-color: #d32f2f;
+          }
+        }
+      }
+    }
+  }
 }
 

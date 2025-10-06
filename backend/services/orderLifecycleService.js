@@ -25,7 +25,7 @@ class OrderLifecycleService {
           // Check if order is still in delivered status
           if (order.status === 'delivered') {
             // Auto-release escrow funds
-            await escrowService.releaseEscrow(order._id, 'auto_release');
+            await escrowService.autoReleaseEscrow(order._id);
             
             // Update order status to completed
             await order.completeOrder();

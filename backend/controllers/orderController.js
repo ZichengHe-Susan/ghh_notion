@@ -504,6 +504,14 @@ const orderController = {
       const { status, trackingNumber, carrier, note } = req.body;
       const userId = req.user.id;
 
+      // Debug logging
+      console.log('=== ORDER STATUS UPDATE DEBUG ===');
+      console.log('Order ID:', id);
+      console.log('Status:', status);
+      console.log('Tracking Number:', trackingNumber);
+      console.log('Carrier:', carrier);
+      console.log('Request Body:', JSON.stringify(req.body, null, 2));
+
       const order = await Order.findById(id);
       if (!order) {
         return res.status(404).json({
@@ -568,7 +576,10 @@ const orderController = {
               message: 'Tracking number and carrier are required for shipping'
             });
           }
+          console.log('About to call markAsShipped with:', { trackingNumber, carrier });
           await order.markAsShipped(trackingNumber, carrier);
+          console.log('After markAsShipped - order.shipping.trackingNumber:', order.shipping.trackingNumber);
+          console.log('After markAsShipped - order.shipping.carrier:', order.shipping.carrier);
           break;
 
         case 'delivered':
@@ -606,7 +617,7 @@ const orderController = {
 
           await order.completeOrder();
           // Release escrow funds
-          await escrowService.releaseEscrow(order._id, 'buyer_confirmation');
+          await escrowService.releaseEscrowToSeller(order._id, order.buyer._id.toString());
           break;
 
         case 'cancelled':
@@ -635,6 +646,12 @@ const orderController = {
       });
 
       await order.save();
+
+      // Debug final order state
+      console.log('=== FINAL ORDER STATE DEBUG ===');
+      console.log('Final order.shipping.trackingNumber:', order.shipping.trackingNumber);
+      console.log('Final order.shipping.carrier:', order.shipping.carrier);
+      console.log('Final order.status:', order.status);
 
       // Send notifications
       await notificationService.createOrderNotification(order, `order_${status}`);
