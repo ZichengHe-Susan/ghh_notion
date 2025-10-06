@@ -18,6 +18,43 @@ body, h1, p {
     font-weight: bold;
     margin: 20px 50px;
   }
+
+  /* Select All Section */
+  .select-all-section {
+    margin: 20px 50px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+  }
+
+  .select-all-checkbox {
+    display: flex;
+    align-items: center;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    color: #333;
+  }
+
+  .select-all-checkbox input[type="checkbox"] {
+    margin-right: 10px;
+    transform: scale(1.2);
+    accent-color: #4CAF50;
+  }
+
+  /* Item Selection */
+  .item-selection {
+    display: flex;
+    align-items: center;
+    margin-right: 15px;
+  }
+
+  .item-checkbox {
+    transform: scale(1.2);
+    accent-color: #4CAF50;
+    cursor: pointer;
+  }
   /* .back-button{
     padding: 10px 20px;
     background-color: #4CAF50;
@@ -76,12 +113,18 @@ body, h1, p {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 10px;
+    padding: 15px;
     margin-bottom: 10px;
     background-color: rgba(48, 48, 48, 0.1);
     border-radius: 5px;
     width: 65%;  /* Set the width to half of the parent container */ 
     margin-right: 0;
+  }
+
+  .cart-item .item-info {
+    display: flex;
+    align-items: center;
+    flex: 1;
   }
 
   .item-title {

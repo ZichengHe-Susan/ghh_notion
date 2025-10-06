@@ -30,6 +30,9 @@ const ShoppingCart = () => {
     const [showPaymentMethods, setShowPaymentMethods] = useState(false);
     const [pricingBreakdown, setPricingBreakdown] = useState(null);
     const [calculatingFees, setCalculatingFees] = useState(false);
+    
+    // Selected items state
+    const [selectedItems, setSelectedItems] = useState(new Set());
 
     useEffect(() => {
         window.scrollTo(0, 0);
@@ -43,8 +46,15 @@ const ShoppingCart = () => {
     
     useEffect(() => {
         if (currentUser && cartItems) {
-            // Calculate total price considering quantity
-            const totalP = cartItems.reduce((acc, item) => {
+            // Initialize selected items - select all by default
+            const allItemIds = new Set(cartItems.map(item => item._id || item.id));
+            setSelectedItems(allItemIds);
+            
+            // Calculate total price considering quantity for selected items only
+            const selectedCartItems = cartItems.filter(item => 
+                selectedItems.has(item._id || item.id)
+            );
+            const totalP = selectedCartItems.reduce((acc, item) => {
                 const itemPrice = item.price || 0;
                 const quantity = item.quantity || 1;
                 return acc + (itemPrice * quantity);
@@ -53,6 +63,23 @@ const ShoppingCart = () => {
             setLoading(false);
         }
     }, [currentUser, cartItems]);
+
+    // Update total price when selected items change
+    useEffect(() => {
+        if (cartItems && selectedItems.size > 0) {
+            const selectedCartItems = cartItems.filter(item => 
+                selectedItems.has(item._id || item.id)
+            );
+            const totalP = selectedCartItems.reduce((acc, item) => {
+                const itemPrice = item.price || 0;
+                const quantity = item.quantity || 1;
+                return acc + (itemPrice * quantity);
+            }, 0);
+            setTotalPrice(totalP);
+        } else {
+            setTotalPrice(0);
+        }
+    }, [cartItems, selectedItems]);
 
     const handleAddressSelect = (address) => {
         setSelectedAddress(address);
@@ -82,16 +109,40 @@ const ShoppingCart = () => {
         }
     };
 
+    const handleItemSelection = (itemId, isSelected) => {
+        const newSelectedItems = new Set(selectedItems);
+        if (isSelected) {
+            newSelectedItems.add(itemId);
+        } else {
+            newSelectedItems.delete(itemId);
+        }
+        setSelectedItems(newSelectedItems);
+    };
+
+    const handleSelectAll = (selectAll) => {
+        if (selectAll) {
+            const allItemIds = new Set(cartItems.map(item => item._id || item.id));
+            setSelectedItems(allItemIds);
+        } else {
+            setSelectedItems(new Set());
+        }
+    };
+
     const handleCheckout = async () => {
         try {
-            if(cartItems.length === 0) {
-                alert('No items in cart');
+            if(selectedItems.size === 0) {
+                alert('Please select at least one item to checkout');
                 return;
             }
 
-            const firstDeliveryMethod = cartItems[0].deliveryMethod;
-            if (!firstDeliveryMethod || cartItems.some(item => item.deliveryMethod !== firstDeliveryMethod)) {
-                alert('All items in your cart must have the same delivery method to proceed. Please adjust your selections.');
+            // Get only selected items
+            const selectedCartItems = cartItems.filter(item => 
+                selectedItems.has(item._id || item.id)
+            );
+
+            const firstDeliveryMethod = selectedCartItems[0].deliveryMethod;
+            if (!firstDeliveryMethod || selectedCartItems.some(item => item.deliveryMethod !== firstDeliveryMethod)) {
+                alert('All selected items must have the same delivery method to proceed. Please adjust your selections.');
                 return;
             }
             
@@ -193,7 +244,12 @@ const ShoppingCart = () => {
             return null;
         }
 
-        const transformedItems = cartItems.map((item, index) => {
+        // Only include selected items
+        const selectedCartItems = cartItems.filter(item => 
+            selectedItems.has(item._id || item.id)
+        );
+
+        const transformedItems = selectedCartItems.map((item, index) => {
             return {
                 itemId: item._id || item.id,
                 quantity: item.quantity,
@@ -208,9 +264,8 @@ const ShoppingCart = () => {
             notes: ''
         };
 
-        console.log('Final orderData:', JSON.stringify(data, null, 2));
         return data;
-    }, [cartItems, selectedAddress]);
+    }, [cartItems, selectedAddress, selectedItems]);
     
     if (loading) {
         return (
@@ -228,9 +283,29 @@ const ShoppingCart = () => {
             <h1 className="shopping-cart-title">Shopping Cart</h1>
             <button className = "back-button"onClick={navigateHome}>Back to Homepage</button>
             {cartItems.length > 0 ? (
+                <div className="select-all-section">
+                    <label className="select-all-checkbox">
+                        <input
+                            type="checkbox"
+                            checked={selectedItems.size === cartItems.length && cartItems.length > 0}
+                            onChange={(e) => handleSelectAll(e.target.checked)}
+                        />
+                        Select All ({selectedItems.size} of {cartItems.length} items)
+                    </label>
+                </div>
+            ) : null}
+            {cartItems.length > 0 ? (
                 <ul className="cart-items">
                     {cartItems.map((item, index) => (
                         <li key={item._id || item.id} className="cart-item">
+                            <div className="item-selection">
+                                <input
+                                    type="checkbox"
+                                    checked={selectedItems.has(item._id || item.id)}
+                                    onChange={(e) => handleItemSelection(item._id || item.id, e.target.checked)}
+                                    className="item-checkbox"
+                                />
+                            </div>
                             <div className="item-info">
                                 <img src={(item.images && item.images[0]?.url) || (item.images && item.images[0]) || item.imageURL || defaultImage} alt={item.title || item.name} className='item-image' />
                                 <span className="item-title">{item.title || item.name}</span>
@@ -310,10 +385,17 @@ const ShoppingCart = () => {
             <div className="cart-sum">
             <h2>Summary</h2>
                 <div className="summary-details">
-                    <p>Total</p>
-                    <p>${totalPrice.toFixed(2)}</p>
+                    <p>Selected Items: {selectedItems.size} of {cartItems.length}</p>
+                    <p>Total: ${totalPrice.toFixed(2)}</p>
                 </div>
-                <button className="checkout-button" onClick={handleCheckout}>Proceed to Payment</button>
+                <button 
+                    className="checkout-button" 
+                    onClick={handleCheckout}
+                    disabled={selectedItems.size === 0}
+                    style={{ opacity: selectedItems.size === 0 ? 0.5 : 1 }}
+                >
+                    Proceed to Payment ({selectedItems.size} items)
+                </button>
                 </div>
                 
                 {/* Payment Methods Section */}
