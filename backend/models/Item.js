@@ -101,6 +101,11 @@ const itemSchema = new mongoose.Schema({
       default: 0,
       min: [0, 'Shipping cost cannot be negative']
     },
+    deliveryCost: {
+      type: Number,
+      default: 0,
+      min: [0, 'Delivery cost cannot be negative']
+    },
     estimatedDeliveryDays: {
       type: Number,
       default: 3,
@@ -108,7 +113,7 @@ const itemSchema = new mongoose.Schema({
     },
     shippingMethods: [{
       type: String,
-      enum: ['standard', 'express', 'overnight', 'pickup']
+      enum: ['standard', 'express', 'overnight', 'pickup', 'delivery']
     }]
   },
   tags: [{

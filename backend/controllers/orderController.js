@@ -127,13 +127,33 @@ const orderController = {
   // @access  Private
   calculateOrderFees: async (req, res) => {
     try {
-      const { items, shippingAddressId } = req.body;
+      console.log('=== BACKEND ORDER CONTROLLER - calculateOrderFees ===');
+      console.log('Request body:', JSON.stringify(req.body, null, 2));
+      
+      const { items, shippingAddressId, deliveryMethod } = req.body;
       const buyerId = req.user.id;
+      
+      console.log('Extracted data:');
+      console.log('- items:', items);
+      console.log('- shippingAddressId:', shippingAddressId);
+      console.log('- deliveryMethod:', deliveryMethod);
 
       if (!items || !Array.isArray(items) || items.length === 0) {
         return res.status(400).json({
           success: false,
           error: 'Items array is required and cannot be empty'
+        });
+      }
+
+      // Extract delivery method from items if not provided at top level
+      const actualDeliveryMethod = deliveryMethod || (items.length > 0 ? items[0].deliveryMethod : null);
+      
+      console.log('Actual delivery method:', actualDeliveryMethod);
+      
+      if (!actualDeliveryMethod) {
+        return res.status(400).json({
+          success: false,
+          error: 'Delivery method is required'
         });
       }
 
@@ -150,6 +170,13 @@ const orderController = {
           return res.status(404).json({
             success: false,
             error: `Item ${itemData.itemId} not found`
+          });
+        }
+
+        if (!item.shipping.shippingMethods.includes(actualDeliveryMethod)) {
+          return res.status(400).json({
+            success: false,
+            error: `Delivery method ${actualDeliveryMethod} is not available for item ${item.title}`
           });
         }
 
@@ -171,7 +198,18 @@ const orderController = {
         
         const itemTotal = item.price * itemData.quantity;
         subtotal += itemTotal;
-        totalShippingCost += item.shipping.shippingCost || 0;
+
+        // TODO: Implement more dynamic shipping cost calculation
+        switch (actualDeliveryMethod) {
+          case 'pickup':
+            totalShippingCost += 0;
+            break;
+          case 'delivery':
+            totalShippingCost += item.shipping.deliveryCost || 0;
+            break;
+          default: // standard, express, overnight
+            totalShippingCost += item.shipping.shippingCost || 0;
+        }
 
         orderItems.push({
           item: item._id,
@@ -241,7 +279,6 @@ const orderController = {
       const {
         items,
         shippingAddressId,
-        shippingMethod = 'standard',
         paymentMethod = 'stripe',
         notes
       } = req.body;
@@ -277,6 +314,29 @@ const orderController = {
         });
       }
 
+      // Validate that all items have the same, valid delivery method selected
+      if (items.some(item => !item.deliveryMethod)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Please select a delivery method for all items in your cart.'
+        });
+      }
+
+      const firstDeliveryMethod = items[0].deliveryMethod;
+      if (items.some(item => item.deliveryMethod !== firstDeliveryMethod)) {
+        return res.status(400).json({
+          success: false,
+          message: 'All items in an order must have the same delivery method. Please create separate orders.'
+        });
+      }
+
+      if (!shippingAddressId && firstDeliveryMethod !== 'pickup') {
+        return res.status(400).json({
+          success: false,
+          message: 'Shipping address is required for non-pickup delivery methods.'
+        });
+      }
+
       // Validate and fetch items with inventory check
       const orderItems = [];
       let subtotal = 0;
@@ -288,6 +348,10 @@ const orderController = {
         
         if (!item) {
           throw new Error(`Item ${itemData.itemId} not found`);
+        }
+
+        if (!item.shipping.shippingMethods.includes(itemData.deliveryMethod)) {
+          throw new Error(`Delivery method ${itemData.deliveryMethod} is not available for item ${item.title}`);
         }
 
         if (item.availability.status !== 'available' || item.availability.quantity < itemData.quantity) {
@@ -302,7 +366,17 @@ const orderController = {
         
         const itemTotal = item.price * itemData.quantity;
         subtotal += itemTotal;
-        totalShippingCost += item.shipping.shippingCost || 0;
+        
+        switch (itemData.deliveryMethod) {
+          case 'pickup':
+            totalShippingCost += 0;
+            break;
+          case 'delivery':
+            totalShippingCost += item.shipping.deliveryCost || 0;
+            break;
+          default: // standard, express, overnight
+            totalShippingCost += item.shipping.shippingCost || 0;
+        }
 
         orderItems.push({
           item: item._id,
@@ -345,7 +419,7 @@ const orderController = {
           currency: 'USD'
         },
         shipping: {
-          method: shippingMethod,
+          method: firstDeliveryMethod,
           address: shippingAddressId
         },
         payment: {
@@ -454,7 +528,7 @@ const orderController = {
       const validTransitions = {
         'pending': ['confirmed', 'cancelled'],
         'confirmed': ['paid', 'cancelled'],
-        'paid': ['shipped', 'cancelled'],
+        'paid': ['shipped', 'cancelled', 'completed'], // Allow completion for pickup/delivery
         'shipped': ['delivered', 'cancelled'],
         'delivered': ['completed', 'disputed'],
         'completed': [],
@@ -514,6 +588,22 @@ const orderController = {
               message: 'Only buyer can complete order'
             });
           }
+
+          const isShippedOrder = ['standard', 'express', 'overnight'].includes(order.shipping.method);
+          if (isShippedOrder && order.status !== 'delivered') {
+            return res.status(400).json({
+              success: false,
+              message: 'Shipped orders must be marked as delivered before completion.'
+            });
+          }
+
+          if (!isShippedOrder && order.status !== 'paid') {
+            return res.status(400).json({
+              success: false,
+              message: 'This order cannot be completed at this stage.'
+            });
+          }
+
           await order.completeOrder();
           // Release escrow funds
           await escrowService.releaseEscrow(order._id, 'buyer_confirmation');

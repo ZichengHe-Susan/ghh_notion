@@ -12,6 +12,15 @@ const cartItemSchema = new mongoose.Schema({
     min: [1, 'Quantity must be at least 1'],
     max: [100, 'Quantity cannot exceed 100']
   },
+  deliveryMethod: {
+    type: String,
+    required: false,
+    enum: ['standard', 'express', 'overnight', 'pickup', 'delivery']
+  },
+  shipping: {
+    type: Object,
+    required: false
+  },
   addedAt: {
     type: Date,
     default: Date.now
@@ -123,7 +132,7 @@ cartSchema.statics.getCartWithItems = async function(userId) {
     .populate({
       path: 'items.itemId',
       model: 'Item',
-      select: 'title price images seller status availability'
+      select: 'title price images seller status availability shipping'
     });
   
   if (!cart) {

@@ -159,7 +159,7 @@ class OrderLifecycleService {
       await Promise.all([
         this.processPendingEscrowReleases(),
         this.processExpiredReservations(),
-        this.processOverdueShipments(),
+        // this.processOverdueShipments(),
         this.processOverdueDeliveries()
       ]);
     } catch (error) {

@@ -190,6 +190,42 @@
       background-color: #5a6268;
     }
 
+    .shipping-options {
+      background-color: rgba(255, 255, 255, 0.1);
+      padding: 15px;
+      border-radius: 5px;
+      margin-top: 10px;
+
+      h4 {
+        color: white;
+        margin-top: 0;
+        margin-bottom: 10px;
+      }
+
+      .checkbox-group {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+
+        label {
+          color: white;
+          display: flex;
+          align-items: center;
+          flex: 1;
+        }
+
+        input[type="checkbox"] {
+          width: auto;
+          margin-right: 10px;
+        }
+
+        .cost-input {
+          margin-left: 10px;
+          width: 120px;
+        }
+      }
+    }
+
     // Disabled input styles
     input:disabled {
       background-color: #f8f9fa;

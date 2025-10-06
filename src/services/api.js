@@ -354,10 +354,10 @@ class ApiService {
   }
 
   // Cart methods (if implemented in backend)
-  async addToCart(itemId) {
+  async addToCart(itemId, shipping) {
     return this.request('/cart/add', {
       method: 'POST',
-      body: JSON.stringify({ itemId }),
+      body: JSON.stringify({ itemId, shipping }),
     });
   }
 
@@ -378,10 +378,10 @@ class ApiService {
     });
   }
 
-  async updateCartItemQuantity(itemId, quantity) {
-    return this.request('/cart/update-quantity', {
+  async updateCartItem(itemId, quantity, deliveryMethod) {
+    return this.request('/cart/update-item', {
       method: 'PUT',
-      body: JSON.stringify({ itemId, quantity }),
+      body: JSON.stringify({ itemId, quantity, deliveryMethod }),
     });
   }
 

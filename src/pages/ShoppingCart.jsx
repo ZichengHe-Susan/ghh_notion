@@ -12,7 +12,7 @@ import PaymentMethodManager from '../components/PaymentMethodManager';
 const ShoppingCart = () => {
     const navigate = useNavigate();
     const { currentUser } = useAuth();
-    const { cartItems, removeFromCart, clearCart, updateItemQuantity } = useCart();
+    const { cartItems, removeFromCart, clearCart, updateItem } = useCart();
     const [totalPrice, setTotalPrice] = useState(0);
     const [loading, setLoading] = useState(true);
     
@@ -75,15 +75,28 @@ const ShoppingCart = () => {
         }
     }
 
+    const handleDeliveryMethodChange = (itemId, newMethod) => {
+        const item = cartItems.find(i => (i._id || i.id) === itemId);
+        if (item) {
+            updateItem(itemId, item.quantity, newMethod);
+        }
+    };
+
     const handleCheckout = async () => {
         try {
             if(cartItems.length === 0) {
                 alert('No items in cart');
                 return;
             }
+
+            const firstDeliveryMethod = cartItems[0].deliveryMethod;
+            if (!firstDeliveryMethod || cartItems.some(item => item.deliveryMethod !== firstDeliveryMethod)) {
+                alert('All items in your cart must have the same delivery method to proceed. Please adjust your selections.');
+                return;
+            }
             
             // Validate shipping address - must select from address book
-            if (!selectedAddress) {
+            if (firstDeliveryMethod !== 'pickup' && !selectedAddress) {
                 alert('Please select an address from your address book.');
                 return;
             }
@@ -130,7 +143,7 @@ const ShoppingCart = () => {
     const calculateOrderFees = async () => {
         try {
             setCalculatingFees(true);
-            
+             
             if (!orderData) {
                 throw new Error('Order data is not available');
             }
@@ -180,19 +193,22 @@ const ShoppingCart = () => {
             return null;
         }
 
-        const transformedItems = cartItems.map(item => ({
-            itemId: item._id || item.id,
-            quantity: item.quantity
-        }));
+        const transformedItems = cartItems.map((item, index) => {
+            return {
+                itemId: item._id || item.id,
+                quantity: item.quantity,
+                deliveryMethod: item.deliveryMethod
+            };
+        });
         
         const data = {
             items: transformedItems,
-            shippingAddressId: selectedAddress._id,
-            shippingMethod: 'standard',
+            shippingAddressId: selectedAddress?._id,
             paymentMethod: 'stripe',
             notes: ''
         };
 
+        console.log('Final orderData:', JSON.stringify(data, null, 2));
         return data;
     }, [cartItems, selectedAddress]);
     
@@ -222,14 +238,35 @@ const ShoppingCart = () => {
                                 <div className="quantity-controls">
                                     <button 
                                         className="quantity-btn" 
-                                        onClick={() => updateItemQuantity(item._id || item.id, (item.quantity || 1) - 1)}
+                                        onClick={() => updateItem(item._id || item.id, (item.quantity || 1) - 1, item.deliveryMethod)}
                                         disabled={!item.quantity || item.quantity <= 1}
                                     >-</button>
                                     <span className="item-quantity">{item.quantity || 1}</span>
                                     <button 
                                         className="quantity-btn" 
-                                        onClick={() => updateItemQuantity(item._id || item.id, (item.quantity || 1) + 1)}
+                                        onClick={() => updateItem(item._id || item.id, (item.quantity || 1) + 1, item.deliveryMethod)}
                                     >+</button>
+                                </div>
+                                <div className="delivery-method-selector">
+                                    {console.log(`Rendering delivery selector for item ${item._id}:`, {
+                                        shipping: item.shipping,
+                                        shippingMethods: item.shipping?.shippingMethods,
+                                        deliveryMethod: item.deliveryMethod
+                                    })}
+                                    <select
+                                        value={item.deliveryMethod || ''}
+                                        onChange={(e) => handleDeliveryMethodChange(item._id || item.id, e.target.value)}
+                                    >
+                                        <option value="" disabled>Select delivery</option>
+                                        {item.shipping?.shippingMethods?.map(method => (
+                                            <option key={method} value={method}>{method}</option>
+                                        ))}
+                                    </select>
+                                    {!item.shipping?.shippingMethods && (
+                                        <div style={{color: 'red', fontSize: '12px'}}>
+                                            No shipping methods available
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                             <div className="item-actions">

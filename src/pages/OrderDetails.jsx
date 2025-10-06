@@ -164,11 +164,21 @@ const OrderDetails = () => {
   };
 
   const canConfirmOrder = () => {
-    return order && order.status === 'delivered' && order.escrow?.status === 'held';
+    if (!order || !currentUser || order.buyer._id !== currentUser.id) return false;
+    const isShipped = ['standard', 'express', 'overnight'].includes(order.shipping.method);
+    if (isShipped) {
+      return order.status === 'delivered' && order.escrow?.status === 'held';
+    }
+    return order.status === 'paid' && order.escrow?.status === 'held';
   };
 
+  const isShippedOrder = () => {
+    return order && ['standard', 'express', 'overnight'].includes(order.shipping.method);
+  }
+
   const canMarkAsDelivered = () => {
-    return order && order.status === 'shipped' && order.buyer._id === currentUser.id;
+    if (!order || !currentUser || order.buyer._id !== currentUser.id) return false;
+    return order.status === 'shipped' && order.buyer._id === currentUser.id;
   };
 
   const canCancelOrder = () => {
@@ -340,8 +350,13 @@ const OrderDetails = () => {
                 Shipping Information
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Method: {order.shipping.method}
+                Method: {order.shipping.method.charAt(0).toUpperCase() + order.shipping.method.slice(1)}
               </Typography>
+              {order.shipping.address && (
+                <Typography variant="body2" color="text.secondary">
+                  Address: {`${order.shipping.address.address.street}, ${order.shipping.address.address.city}, ${order.shipping.address.address.state} ${order.shipping.address.address.zipCode}`}
+                </Typography>
+              )}
               {order.shipping.trackingNumber && (
                 <Typography variant="body2" color="text.secondary">
                   Tracking: {order.shipping.trackingNumber}
@@ -477,6 +492,11 @@ const OrderDetails = () => {
             <DialogContentText sx={{ mt: 2 }}>
               Are you sure you want to confirm this purchase?
             </DialogContentText>
+            {!isShippedOrder() && (
+              <Alert severity="warning" sx={{ mt: 2 }}>
+                This is a '{order.shipping.method}' order. Confirming will immediately release payment to the seller. This action cannot be undone.
+              </Alert>
+            )}
           </DialogContent>
           <DialogActions>
             <Button onClick={() => setConfirmDialogOpen(false)} disabled={actionLoading}>

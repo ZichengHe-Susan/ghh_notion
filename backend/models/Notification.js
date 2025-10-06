@@ -11,6 +11,7 @@ const notificationSchema = new mongoose.Schema({
     required: true,
     enum: [
       'order_created', 'order_confirmed', 'order_shipped', 'order_delivered', 'order_cancelled',
+      'order_shipping_reminder',
       'payment_received', 'payment_failed', 'payment_refunded',
       'item_sold', 'item_viewed', 'item_favorited', 'item_expired',
       'message_received', 'message_sent',
@@ -270,6 +271,7 @@ notificationSchema.pre('save', function(next) {
       'order_shipped': 'transaction',
       'order_delivered': 'transaction',
       'order_cancelled': 'transaction',
+      'order_shipping_reminder': 'transaction',
       'payment_received': 'transaction',
       'payment_failed': 'transaction',
       'payment_refunded': 'transaction',

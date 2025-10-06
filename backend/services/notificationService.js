@@ -406,6 +406,10 @@ class NotificationService {
         notificationData.title = 'Order Cancelled';
         notificationData.message = `Order #${order.orderNumber} has been cancelled`;
         break;
+      case 'order_shipping_reminder':
+        notificationData.title = 'Reminder to Ship Your Order';
+        notificationData.message = `Please remember to ship order #${order.orderNumber}.`;
+        break;
     }
 
     return await this.createNotification(notificationData);

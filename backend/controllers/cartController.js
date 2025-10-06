@@ -11,19 +11,27 @@ const cartController = {
    */
   getCart: async (req, res) => {
     try {
+      console.log('=== BACKEND CART CONTROLLER - getCart called ===');
       const userId = req.user.id;
+      console.log('User ID:', userId);
 
       const cart = await Cart.getCartWithItems(userId);
+      console.log('Raw cart from DB:', JSON.stringify(cart, null, 2));
 
       // Filter out items that are no longer available
       const availableItems = cart.items.filter(cartItem => {
         const item = cartItem.itemId;
-        return item && 
+        const isAvailable = item && 
                item.status === 'active' && 
                item.availability && 
                item.availability.status === 'available' && 
                item.availability.quantity > 0;
+        console.log(`Item ${item?._id} availability check:`, isAvailable);
+        return isAvailable;
       });
+
+      console.log('Available items count:', availableItems.length);
+      console.log('Available items:', JSON.stringify(availableItems, null, 2));
 
       // Update cart if items were filtered out
       if (availableItems.length !== cart.items.length) {
@@ -34,6 +42,13 @@ const cartController = {
       // Calculate total price
       const totalPrice = await cart.getTotalPrice();
       const itemCount = cart.getItemCount();
+
+      console.log('Final response data:', {
+        items: availableItems,
+        totalPrice: totalPrice,
+        itemCount: itemCount,
+        cartId: cart._id
+      });
 
       res.json({
         success: true,
@@ -61,8 +76,13 @@ const cartController = {
    */
   addToCart: async (req, res) => {
     try {
+      console.log('=== BACKEND CART CONTROLLER - addToCart called ===');
+      console.log('Request body:', JSON.stringify(req.body, null, 2));
+      console.log('User ID:', req.user.id);
+      
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
+        console.log('Validation errors:', errors.array());
         return res.status(400).json({
           success: false,
           error: 'Validation failed',
@@ -70,8 +90,14 @@ const cartController = {
         });
       }
 
-      const { itemId, quantity = 1 } = req.body;
+      const { itemId, quantity = 1, deliveryMethod, shipping } = req.body;
       const userId = req.user.id;
+      
+      console.log('Extracted data:');
+      console.log('- itemId:', itemId);
+      console.log('- quantity:', quantity);
+      console.log('- deliveryMethod:', deliveryMethod);
+      console.log('- shipping:', JSON.stringify(shipping, null, 2));
 
       // Check if item exists and is available
       const item = await Item.findById(itemId);
@@ -103,6 +129,13 @@ const cartController = {
         });
       }
 
+      if (deliveryMethod && !item.shipping.shippingMethods.includes(deliveryMethod)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Selected delivery method is not available for this item'
+        });
+      }
+
       // Check if user is trying to add their own item
       if (item.seller.toString() === userId) {
         return res.status(400).json({
@@ -119,6 +152,8 @@ const cartController = {
         cartItem.itemId.toString() === itemId
       );
 
+      console.log('Existing item in cart:', existingItem ? 'Found' : 'Not found');
+
       if (existingItem) {
         const newQuantity = existingItem.quantity + quantity;
         if (newQuantity > item.availability.quantity) {
@@ -128,22 +163,32 @@ const cartController = {
           });
         }
         existingItem.quantity = newQuantity;
+        if (deliveryMethod) {
+          existingItem.deliveryMethod = deliveryMethod;
+        }
+        console.log('Updated existing cart item:', JSON.stringify(existingItem, null, 2));
       } else {
-        cart.items.push({
+        const newCartItem = {
           itemId: itemId,
           quantity: quantity,
+          deliveryMethod: deliveryMethod,
+          shipping: shipping,
           addedAt: new Date()
-        });
+        };
+        console.log('Creating new cart item:', JSON.stringify(newCartItem, null, 2));
+        cart.items.push(newCartItem);
       }
 
+      console.log('Saving cart with items:', cart.items.length);
       await cart.save();
+      console.log('Cart saved successfully');
 
       // Populate the cart with item details for response
       const populatedCart = await Cart.findById(cart._id)
         .populate({
           path: 'items.itemId',
           model: 'Item',
-          select: 'title price images seller status availability'
+          select: 'title price images seller status availability shipping'
         });
 
       const totalPrice = await cart.getTotalPrice();
@@ -214,7 +259,7 @@ const cartController = {
         .populate({
           path: 'items.itemId',
           model: 'Item',
-          select: 'title price images seller status availability'
+          select: 'title price images seller status availability shipping'
         });
 
       const totalPrice = await cart.getTotalPrice();
@@ -280,11 +325,11 @@ const cartController = {
   },
 
   /**
-   * @route   PUT /api/cart/update-quantity
-   * @desc    Update item quantity in cart
+   * @route   PUT /api/cart/update-item
+   * @desc    Update item quantity and delivery method in cart
    * @access  Private
    */
-  updateQuantity: async (req, res) => {
+  updateItem: async (req, res) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -295,10 +340,10 @@ const cartController = {
         });
       }
 
-      const { itemId, quantity } = req.body;
+      const { itemId, quantity, deliveryMethod } = req.body;
       const userId = req.user.id;
 
-      if (quantity < 0) {
+      if (quantity !== undefined && quantity < 0) {
         return res.status(400).json({
           success: false,
           error: 'Quantity cannot be negative'
@@ -324,25 +369,46 @@ const cartController = {
         });
       }
 
-      // Check item availability if increasing quantity
-      if (quantity > cartItem.quantity) {
-        const item = await Item.findById(itemId);
-        if (!item || !item.availability || item.availability.quantity < quantity) {
+      const item = await Item.findById(itemId);
+      if (!item) {
+        return res.status(404).json({
+          success: false,
+          error: 'Item details not found'
+        });
+      }
+
+      if (quantity !== undefined) {
+        if (quantity > (item.availability?.quantity || 0)) {
           return res.status(400).json({
             success: false,
-            error: `Only ${item?.availability?.quantity || 0} items available`
+            error: `Only ${item.availability?.quantity || 0} items available`
           });
+        }
+        if (quantity === 0) {
+          await cart.removeItem(itemId);
+        } else {
+          cartItem.quantity = quantity;
         }
       }
 
-      await cart.updateItemQuantity(itemId, quantity);
+      if (deliveryMethod !== undefined) {
+        if (deliveryMethod && !item.shipping.shippingMethods.includes(deliveryMethod)) {
+          return res.status(400).json({
+            success: false,
+            error: 'Selected delivery method is not available for this item'
+          });
+        }
+        cartItem.deliveryMethod = deliveryMethod;
+      }
+
+      await cart.save();
 
       // Populate the cart with item details for response
       const populatedCart = await Cart.findById(cart._id)
         .populate({
           path: 'items.itemId',
           model: 'Item',
-          select: 'title price images seller status availability'
+          select: 'title price images seller status availability shipping'
         });
 
       const totalPrice = await cart.getTotalPrice();
@@ -356,14 +422,14 @@ const cartController = {
           itemCount: itemCount,
           cartId: cart._id
         },
-        message: 'Item quantity updated successfully'
+        message: 'Cart item updated successfully'
       });
 
     } catch (error) {
-      logger.error('Update quantity error:', error);
+      logger.error('Update item error:', error);
       res.status(500).json({
         success: false,
-        error: 'Failed to update item quantity'
+        error: 'Failed to update item in cart'
       });
     }
   }

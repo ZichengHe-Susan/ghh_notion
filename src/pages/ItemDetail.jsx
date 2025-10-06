@@ -55,6 +55,20 @@ const ItemDetails = () => {
       <p><strong>Price:</strong> ${itemData.price}</p>
       <p><strong>Description:</strong> {itemData.description}</p>
       <p><strong>Location Details:</strong> {itemData.location ? `${itemData.location.address}, ${itemData.location.city}, ${itemData.location.state} ${itemData.location.zipCode}` : 'Location not specified'}</p>
+      
+      {itemData.shipping && itemData.shipping.shippingMethods && itemData.shipping.shippingMethods.length > 0 && (
+        <div className="shipping-methods">
+          <strong>Available Delivery Methods:</strong>
+          <ul>
+            {itemData.shipping.shippingMethods.map((method, index) => (
+              <li key={index}>{method.charAt(0).toUpperCase() + method.slice(1)}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <button className="add-to-cart-button">Add to Cart</button>
+
       {itemData.images && itemData.images.length > 0 ? (
         <div className="item-images">
           {itemData.images.map((image, index) => (

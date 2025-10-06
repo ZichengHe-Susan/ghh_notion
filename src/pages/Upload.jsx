@@ -13,6 +13,13 @@ const AddItem = () => {
   const [itemCategory, setItemCategory] = useState("");
   const [itemCondition, setItemCondition] = useState("good");
   const [itemImage, setItemImage] = useState(null);
+  const [shippingMethods, setShippingMethods] = useState({
+    standard: false,
+    delivery: false,
+    pickup: false,
+  });
+  const [shippingCost, setShippingCost] = useState("");
+  const [deliveryCost, setDeliveryCost] = useState("");
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [categories, setCategories] = useState([]);
@@ -78,6 +85,8 @@ const AddItem = () => {
 
   const onSubmitItem = async (imageURL) => {
     try {
+      const selectedMethods = Object.keys(shippingMethods).filter(method => shippingMethods[method]);
+
       // Use selected address
       const itemData = {
         title: itemTitle,
@@ -95,9 +104,9 @@ const AddItem = () => {
         },
         images: imageURL ? [{ url: imageURL, alt: itemTitle, isPrimary: true }] : [],
         shipping: {
-          isShippable: true,
-          shippingCost: 0,
-          estimatedDeliveryDays: 3
+          shippingMethods: selectedMethods,
+          shippingCost: parseFloat(shippingCost) || 0,
+          deliveryCost: parseFloat(deliveryCost) || 0,
         }
       };
 
@@ -129,6 +138,9 @@ const AddItem = () => {
     setItemDescription('');
     setItemCategory('');
     setItemCondition('good');
+    setShippingMethods({ standard: false, delivery: false, pickup: false });
+    setShippingCost('');
+    setDeliveryCost('');
     setIsSubmitted(false);
     setSelectedAddress(null);
   };
@@ -167,6 +179,17 @@ const AddItem = () => {
       return;
     }
 
+    if (shippingMethods.standard && (isNaN(parseFloat(shippingCost)) || parseFloat(shippingCost) < 0)) {
+      alert("Please enter a valid shipping cost.");
+      setUploading(false);
+      return;
+    }
+
+    if (shippingMethods.delivery && (isNaN(parseFloat(deliveryCost)) || parseFloat(deliveryCost) < 0)) {
+      alert("Please enter a valid delivery cost.");
+      setUploading(false);
+      return;
+    }
 
     try {
       // Upload image to S3
@@ -319,6 +342,59 @@ const AddItem = () => {
             <option value="fair">Fair</option>
             <option value="poor">Poor</option>
           </select>
+
+          {/* Shipping Options */}
+          <div className="shipping-options">
+            <h4>Available Delivery Methods</h4>
+            <div className="checkbox-group">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={shippingMethods.standard}
+                  onChange={() => setShippingMethods(prev => ({ ...prev, standard: !prev.standard }))}
+                />
+                Shipping (e.g., USPS, FedEx)
+              </label>
+              {shippingMethods.standard && (
+                <input
+                  type="number"
+                  placeholder="Shipping Cost"
+                  value={shippingCost}
+                  onChange={(e) => setShippingCost(e.target.value)}
+                  className="cost-input"
+                />
+              )}
+            </div>
+            <div className="checkbox-group">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={shippingMethods.delivery}
+                  onChange={() => setShippingMethods(prev => ({ ...prev, delivery: !prev.delivery }))}
+                />
+                Local Delivery (Seller delivers)
+              </label>
+              {shippingMethods.delivery && (
+                <input
+                  type="number"
+                  placeholder="Delivery Cost"
+                  value={deliveryCost}
+                  onChange={(e) => setDeliveryCost(e.target.value)}
+                  className="cost-input"
+                />
+              )}
+            </div>
+            <div className="checkbox-group">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={shippingMethods.pickup}
+                  onChange={() => setShippingMethods(prev => ({ ...prev, pickup: !prev.pickup }))}
+                />
+                Local Pickup (Buyer collects)
+              </label>
+            </div>
+          </div>
 
           {/* Address Selection */}
           <div className="address-selection">
