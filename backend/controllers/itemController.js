@@ -100,7 +100,7 @@ const itemController = {
 
   /**
    * @route   GET /api/items/:id
-   * @desc    Get single item by ID
+   * @desc    Get single item by ID with order information if sold
    * @access  Public
    */
   getItem: async (req, res) => {
@@ -120,11 +120,43 @@ const itemController = {
         });
       }
 
+      // Get order information if item is sold
+      let orderInfo = null;
+      if (item.availability?.status === 'sold' || item.status === 'sold' || item.availability?.quantity === 0) {
+        const Order = require('../models/Order');
+        const order = await Order.findOne({
+          'items.item': id,
+          seller: item.seller._id
+        })
+        .populate('buyer', 'firstName lastName email phone')
+        .populate('shipping.address', 'address contactInfo label')
+        .lean();
+
+        if (order) {
+          orderInfo = {
+            orderId: order._id,
+            orderNumber: order.orderNumber,
+            buyer: order.buyer,
+            status: order.status,
+            shipping: order.shipping,
+            createdAt: order.createdAt,
+            payment: order.payment,
+            escrow: order.escrow
+          };
+        }
+      }
+
+      // Add order information to item
+      const itemWithOrderInfo = {
+        ...item,
+        orderInfo
+      };
+
       await Item.findByIdAndUpdate(id, { $inc: { 'analytics.views': 1 } });
 
       res.json({
         success: true,
-        data: item
+        data: itemWithOrderInfo
       });
 
     } catch (error) {
@@ -597,7 +629,7 @@ const itemController = {
 
   /**
    * @route   GET /api/items/seller/:sellerId
-   * @desc    Get items by seller
+   * @desc    Get items by seller with order information
    * @access  Public
    */
   getItemsBySeller: async (req, res) => {
@@ -614,16 +646,63 @@ const itemController = {
 
       const items = await Item.find(filter)
         .populate('category', 'name slug')
-        .sort({ createdAt: -1 })
+        .sort({ 
+          // Sort sold items first, then by creation date
+          'availability.status': -1, // 'sold' comes before 'available' alphabetically
+          createdAt: -1 
+        })
         .skip(skip)
         .limit(parseInt(limit));
+
+      // Get order information for sold items
+      const Order = require('../models/Order');
+      const soldItemIds = items
+        .filter(item => item.availability.status === 'sold' || item.status === 'sold')
+        .map(item => item._id);
+
+      let orderInfo = {};
+      if (soldItemIds.length > 0) {
+        const orders = await Order.find({
+          'items.item': { $in: soldItemIds },
+          seller: sellerId
+        })
+        .populate('buyer', 'firstName lastName email')
+        .populate('items.item', 'title')
+        .lean();
+
+        // Create a map of item ID to order information
+        orders.forEach(order => {
+          order.items.forEach(orderItem => {
+            if (soldItemIds.includes(orderItem.item._id)) {
+              orderInfo[orderItem.item._id] = {
+                orderId: order._id,
+                orderNumber: order.orderNumber,
+                buyer: order.buyer,
+                status: order.status,
+                shipping: order.shipping,
+                createdAt: order.createdAt,
+                payment: order.payment
+              };
+            }
+          });
+        });
+      }
+
+      // Add order information to items
+      const itemsWithOrderInfo = items.map(item => {
+        const itemObj = item.toObject();
+        if (orderInfo[item._id]) {
+          itemObj.orderInfo = orderInfo[item._id];
+        }
+        return itemObj;
+      });
 
       const totalItems = await Item.countDocuments(filter);
 
       res.json({
         success: true,
         data: {
-          items,
+          items: itemsWithOrderInfo,
           pagination: {
             currentPage: parseInt(page),
             totalPages: Math.ceil(totalItems / parseInt(limit)),

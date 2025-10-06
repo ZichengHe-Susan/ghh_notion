@@ -137,6 +137,103 @@
         font-size: 1.75rem;
         margin-bottom: 16px;
         }
+
+        // Item box styles
+        .itemBox {
+          transition: all 0.3s ease;
+          border-radius: 12px;
+          overflow: hidden;
+          background: #fff;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+          
+          &:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+          }
+
+          // Sold item styles
+          &.sold-item {
+            background: linear-gradient(135deg, #fff 0%, #f8f8f8 100%);
+            
+            .itemImage {
+              filter: grayscale(60%) brightness(0.9);
+            }
+            
+            .textContainer {
+              .itemTitle {
+                color: #666;
+              }
+              
+              .itemPrice {
+                color: #888;
+              }
+            }
+          }
+
+          // Available item styles
+          &.available-item {
+            background: linear-gradient(135deg, #fff 0%, #f0fff0 100%);
+            
+            &:hover {
+              box-shadow: 0 8px 24px rgba(68, 255, 68, 0.2);
+            }
+          }
+
+          .textContainer {
+            padding: 16px;
+            
+            .itemTitle {
+              font-size: 1.1rem;
+              font-weight: 600;
+              margin-bottom: 8px;
+              color: #333;
+            }
+            
+            .itemPrice {
+              font-size: 1rem;
+              font-weight: 500;
+              color: #2e7d32;
+              margin-bottom: 8px;
+            }
+
+            .shipping-status {
+              background: #f5f5f5;
+              padding: 8px;
+              border-radius: 6px;
+              border-left: 3px solid #ff4444;
+              
+              p {
+                margin: 2px 0;
+              }
+            }
+          }
+
+          .imageContainer {
+            position: relative;
+            height: 200px;
+            overflow: hidden;
+            
+            .itemImage {
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
+              transition: filter 0.3s ease;
+            }
+          }
+
+          .status-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+            z-index: 10;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+          }
+        }
     }   
     * {
         position: relative;

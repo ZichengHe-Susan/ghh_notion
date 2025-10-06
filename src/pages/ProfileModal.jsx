@@ -32,8 +32,13 @@ const ProfileModal = ({ showProfile, handleClose }) => {
             const items = Array.isArray(result.data) ? result.data : result.data.items || [];
             setUserItems(items);
             
-            // Count sold items (items with a buyer)
-            const soldCount = items.filter(item => item.buyer).length;
+            // Count sold items (items with sold status or order info)
+            const soldCount = items.filter(item => 
+              item.availability?.status === 'sold' || 
+              item.status === 'sold' || 
+              item.availability?.quantity === 0 ||
+              item.orderInfo
+            ).length;
             setItemSold(soldCount);
             
             // For now, set bought items to 0 since we don't have a specific endpoint
